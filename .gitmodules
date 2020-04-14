@@ -1,9 +1,6 @@
 [submodule "freeverb3"]
 	path = freeverb3
 	url = https://git.savannah.nongnu.org/git/freeverb3.git
-[submodule "imgui"]
-	path = imgui
-	url = https://github.com/ocornut/imgui.git
 [submodule "uWebSockets"]
 	path = uWebSockets
 	url = https://github.com/uNetworking/uWebSockets.git
