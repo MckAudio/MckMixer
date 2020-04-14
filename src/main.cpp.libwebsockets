@@ -1,0 +1,142 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <signal.h>
+
+// Audio
+#include <freeverb/strev.hpp>
+#include <jack/jack.h>
+
+// Web
+#include <libwebsockets.h>
+#include <string.h>
+
+static int interrupted = 0;
+
+static const struct lws_http_mount mount = {
+    /* .mount_next */ NULL,         /* linked-list "next" */
+    /* .mountpoint */ "/",          /* mountpoint URL */
+    /* .origin */ "./gui", /* serve from dir */
+    /* .def */ "index.html",        /* default filename */
+    /* .protocol */ NULL,
+    /* .cgienv */ NULL,
+    /* .extra_mimetypes */ NULL,
+    /* .interpret */ NULL,
+    /* .cgi_timeout */ 0,
+    /* .cache_max_age */ 0,
+    /* .auth_mask */ 0,
+    /* .cache_reusable */ 0,
+    /* .cache_revalidate */ 0,
+    /* .cache_intermediaries */ 0,
+    /* .origin_protocol */ LWSMPRO_FILE, /* files in a dir */
+    /* .mountpoint_len */ 1,             /* char count */
+    /* .basic_auth_login_file */ NULL,
+};
+
+jack_port_t *audio_in_l;
+jack_port_t *audio_in_r;
+jack_port_t *audio_out_l;
+jack_port_t *audio_out_r;
+
+jack_nframes_t bufferSize;
+jack_nframes_t sampleRate;
+
+jack_client_t *client;
+
+fv3::revbase_f *reverb;
+
+static void SignalHandler(int sig)
+{
+    fprintf(stdout, "Signal %d received, exiting...\n", sig);
+
+    interrupted = 1;
+
+    /*
+    if (client != nullptr) {
+        jack_client_close(client);
+    }
+    exit(0);
+    */
+}
+
+static int Process(jack_nframes_t nframes, void *arg)
+{
+    jack_default_audio_sample_t *in_l = (jack_default_audio_sample_t *)jack_port_get_buffer(audio_in_l, nframes);
+    jack_default_audio_sample_t *in_r = (jack_default_audio_sample_t *)jack_port_get_buffer(audio_in_r, nframes);
+    jack_default_audio_sample_t *out_l = (jack_default_audio_sample_t *)jack_port_get_buffer(audio_out_l, nframes);
+    jack_default_audio_sample_t *out_r = (jack_default_audio_sample_t *)jack_port_get_buffer(audio_out_r, nframes);
+
+    reverb->processreplace(in_l, in_r, out_l, out_r, nframes);
+
+    return 0;
+}
+
+int main(int argc, char **argv)
+{
+    if ((client = jack_client_open("SimpleVerb", JackNullOption, NULL)) == 0)
+    {
+        fprintf(stderr, "JACK server is not running.\n");
+        return 1;
+    }
+
+    jack_set_process_callback(client, Process, 0);
+
+    audio_in_l = jack_port_register(client, "audio_in_l", JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0);
+    audio_in_r = jack_port_register(client, "audio_in_r", JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0);
+    audio_out_l = jack_port_register(client, "audio_out_l", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+    audio_out_r = jack_port_register(client, "audio_out_r", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+
+    bufferSize = jack_get_buffer_size(client);
+    sampleRate = jack_get_sample_rate(client);
+
+    reverb = new fv3::strev_f();
+    reverb->setSampleRate(sampleRate);
+
+    if (jack_activate(client))
+    {
+        fprintf(stderr, "Unable to activate JACK client!\n");
+        return 1;
+    }
+
+    signal(SIGQUIT, SignalHandler);
+    signal(SIGTERM, SignalHandler);
+    signal(SIGHUP, SignalHandler);
+    signal(SIGINT, SignalHandler);
+
+    // Start Web Server
+    int logs = LLL_USER | LLL_ERR | LLL_WARN | LLL_NOTICE;
+    lws_set_log_level(logs, NULL);
+    lwsl_user("LWS minimal http server | visit http://localhost:7681\n");
+
+    struct lws_context_creation_info info;
+    struct lws_context *context;
+
+    memset(&info, 0, sizeof(info));
+    info.port = 7681;
+    info.mounts = &mount;
+    info.error_document_404 = "/404.html";
+    info.options = LWS_SERVER_OPTION_HTTP_HEADERS_SECURITY_BEST_PRACTICES_ENFORCE;
+
+    context = lws_create_context(&info);
+    if (!context)
+    {
+        if (client != nullptr)
+        {
+            jack_client_close(client);
+        }
+        lwsl_err("lws init failed\n");
+        return 1;
+    }
+
+    int n = 0;
+    while (n >= 0 && !interrupted) {
+        n = lws_service(context, 0);
+    }
+
+    lws_context_destroy(context);
+
+    if (client != nullptr)
+    {
+        jack_client_close(client);
+    }
+    return 0;
+}
