@@ -1,9 +1,13 @@
 #pragma once
 
 #include "MckTypes.h"
+#include "JackHelper.h"
 
 // Audio
 #include <freeverb/strev.hpp>
+#include <freeverb/progenitor2.hpp>
+#include <freeverb/zrev2.hpp>
+#include <freeverb/nrevb.hpp>
 #include <jack/jack.h>
 
 #include <nlohmann/json.hpp>
@@ -21,6 +25,15 @@ namespace mck
 {
 
     #define MCK_MIXER_MAX_INPUTS 32
+
+    enum ReverbType {
+        REV_STREV = 0,
+        REV_PROG,
+        REV_ZREV,
+        REV_NREV,
+        REV_LENGTH
+    };
+
 class Mixer
 {
 public:
@@ -63,9 +76,9 @@ private:
     jack_default_audio_sample_t *m_reverbBuffer[2];
     jack_default_audio_sample_t *m_delayBuffer[2];
 
-    fv3::revbase_f *m_reverb;
+    fv3::revbase_f **m_reverb;
 
-    void ProcessReverb(jack_nframes_t nframes, float rt60);
+    void ProcessReverb(jack_nframes_t nframes, float rt60, unsigned type);
 
     bool InitConfig(mck::Config &config);
     bool LoadConfig(mck::Config &config, std::string path);

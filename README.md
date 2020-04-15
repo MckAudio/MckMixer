@@ -3,7 +3,9 @@
 ## Build dependencies
 
 ```
-sudo apt install libfftw3-dev libjack-jackd2-dev
+sudo apt install libfftw3-dev libjack-jackd2-
+
+sudo ld-config
 ```
 
 ## Build steps

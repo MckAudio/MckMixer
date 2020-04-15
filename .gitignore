@@ -1,2 +1,3 @@
 .vscode
 mck-mixer
+./www/build/*

@@ -36,8 +36,8 @@ void mck::to_json(nlohmann::json &j, const Channel &c)
     j["gain"] = c.gain;
     j["pan"] = c.pan;
     j["send"] = c.send;
-    j["source"] = c.source;
-    j["sourceStereo"] = c.sourceStereo;
+    j["sourceLeft"] = c.sourceLeft;
+    j["sourceRight"] = c.sourceRight;
 }
 void mck::from_json(const nlohmann::json &j, Channel &c)
 {
@@ -46,18 +46,20 @@ void mck::from_json(const nlohmann::json &j, Channel &c)
     c.gain = j.at("gain").get<double>();
     c.pan = j.at("pan").get<double>();
     c.send = j.at("send").get<double>();
-    c.source = j.at("source").get<std::string>();
-    c.sourceStereo = j.at("sourceStereo").get<std::string>();
+    c.sourceLeft = j.at("sourceLeft").get<std::string>();
+    c.sourceRight = j.at("sourceRight").get<std::string>();
 }
 
 // REVERB
 void mck::to_json(nlohmann::json &j, const mck::Reverb &r) {
     j["rt60"] = r.rt60;
     j["gain"] = r.gain;
+    j["type"] = r.type;
 }
 void mck::from_json(const nlohmann::json &j, mck::Reverb &r) {
     r.rt60 = j.at("rt60").get<double>();
     r.gain = j.at("gain").get<double>();
+    r.type = j.at("type").get<unsigned>();
 }
 
 // CONFIG
@@ -66,6 +68,8 @@ void mck::to_json(nlohmann::json &j, const Config &c)
     j["channels"] = c.channels;
     j["channelCount"] = c.channelCount;
     j["gain"] = c.gain;
+    j["targetLeft"] = c.targetLeft;
+    j["targetRight"] = c.targetRight;
     j["reverb"] = c.reverb;
 }
 void mck::from_json(const nlohmann::json &j, Config &c)
@@ -73,5 +77,7 @@ void mck::from_json(const nlohmann::json &j, Config &c)
     c.channels = j.at("channels").get<std::vector<Channel>>();
     c.channelCount = j.at("channelCount").get<unsigned>();
     c.gain = j.at("gain").get<double>();
+    c.targetLeft = j.at("targetLeft").get<std::vector<std::string>>();
+    c.targetRight = j.at("targetRight").get<std::vector<std::string>>();
     c.reverb = j.at("reverb").get<Reverb>();
 }

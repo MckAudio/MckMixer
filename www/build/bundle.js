@@ -49,6 +49,9 @@ var app = (function () {
     function space() {
         return text(' ');
     }
+    function empty() {
+        return text('');
+    }
     function listen(node, event, handler, options) {
         node.addEventListener(event, handler, options);
         return () => node.removeEventListener(event, handler, options);
@@ -355,12 +358,19 @@ var app = (function () {
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[17] = list[i];
-    	child_ctx[19] = i;
+    	child_ctx[20] = list[i];
+    	child_ctx[22] = i;
     	return child_ctx;
     }
 
-    // (90:2) {#if data != undefined}
+    function get_each_context_1(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[23] = list[i];
+    	child_ctx[22] = i;
+    	return child_ctx;
+    }
+
+    // (94:2) {#if data != undefined}
     function create_if_block(ctx) {
     	let div0;
     	let i0;
@@ -377,10 +387,10 @@ var app = (function () {
     	let t6;
     	let div1;
     	let i1;
-    	let t7;
-    	let span2;
+    	let t8;
+    	let select;
     	let t9;
-    	let span3;
+    	let span2;
     	let t10_value = /*data*/ ctx[0].reverb.rt60 + "";
     	let t10;
     	let t11;
@@ -388,11 +398,32 @@ var app = (function () {
     	let input1;
     	let input1_value_value;
     	let t13;
+    	let div2;
+    	let i2;
     	let t14;
-    	let button0;
+    	let span3;
     	let t16;
+    	let span4;
+    	let t17_value = /*data*/ ctx[0].reverb.gain + "";
+    	let t17;
+    	let t18;
+    	let t19;
+    	let input2;
+    	let input2_value_value;
+    	let t20;
+    	let t21;
+    	let button0;
+    	let t23;
     	let button1;
     	let dispose;
+    	let each_value_1 = /*revTypes*/ ctx[1];
+    	validate_each_argument(each_value_1);
+    	let each_blocks_1 = [];
+
+    	for (let i = 0; i < each_value_1.length; i += 1) {
+    		each_blocks_1[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
+    	}
+
     	let each_value = /*data*/ ctx[0].channels;
     	validate_each_argument(each_value);
     	let each_blocks = [];
@@ -417,51 +448,78 @@ var app = (function () {
     			t6 = space();
     			div1 = element("div");
     			i1 = element("i");
-    			t7 = space();
-    			span2 = element("span");
-    			span2.textContent = "Master";
+    			i1.textContent = "REV";
+    			t8 = space();
+    			select = element("select");
+
+    			for (let i = 0; i < each_blocks_1.length; i += 1) {
+    				each_blocks_1[i].c();
+    			}
+
     			t9 = space();
-    			span3 = element("span");
+    			span2 = element("span");
     			t10 = text(t10_value);
     			t11 = text(" s");
     			t12 = space();
     			input1 = element("input");
     			t13 = space();
+    			div2 = element("div");
+    			i2 = element("i");
+    			t14 = space();
+    			span3 = element("span");
+    			span3.textContent = "Gain";
+    			t16 = space();
+    			span4 = element("span");
+    			t17 = text(t17_value);
+    			t18 = text(" dB");
+    			t19 = space();
+    			input2 = element("input");
+    			t20 = space();
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].c();
     			}
 
-    			t14 = space();
+    			t21 = space();
     			button0 = element("button");
     			button0.textContent = "Add new mono channel";
-    			t16 = space();
+    			t23 = space();
     			button1 = element("button");
     			button1.textContent = "Add new stereo channel";
-    			add_location(i0, file, 91, 8, 2061);
-    			add_location(span0, file, 92, 8, 2077);
-    			add_location(span1, file, 93, 8, 2105);
+    			add_location(i0, file, 95, 8, 2156);
+    			add_location(span0, file, 96, 8, 2172);
+    			add_location(span1, file, 97, 8, 2200);
     			attr_dev(input0, "type", "range");
     			input0.value = input0_value_value = Math.round(/*data*/ ctx[0].gain).toString();
     			attr_dev(input0, "min", "-60");
     			attr_dev(input0, "max", "6");
-    			add_location(input0, file, 94, 8, 2141);
-    			attr_dev(div0, "class", "channel svelte-viunz7");
-    			add_location(div0, file, 90, 6, 2031);
-    			add_location(i1, file, 102, 8, 2402);
-    			add_location(span2, file, 103, 8, 2418);
-    			add_location(span3, file, 104, 8, 2446);
+    			add_location(input0, file, 98, 8, 2236);
+    			attr_dev(div0, "class", "channel svelte-5v14zm");
+    			add_location(div0, file, 94, 6, 2126);
+    			add_location(i1, file, 106, 8, 2497);
+    			add_location(select, file, 107, 8, 2516);
+    			add_location(span2, file, 116, 8, 2851);
     			attr_dev(input1, "type", "range");
     			input1.value = input1_value_value = Math.round(/*data*/ ctx[0].reverb * 10).toString();
     			attr_dev(input1, "min", "5.0");
     			attr_dev(input1, "max", "100.0");
-    			add_location(input1, file, 105, 8, 2488);
-    			attr_dev(div1, "class", "channel svelte-viunz7");
-    			add_location(div1, file, 101, 6, 2372);
+    			add_location(input1, file, 117, 8, 2893);
+    			attr_dev(div1, "class", "channel svelte-5v14zm");
+    			add_location(div1, file, 105, 6, 2467);
+    			add_location(i2, file, 125, 8, 3174);
+    			add_location(span3, file, 126, 8, 3190);
+    			add_location(span4, file, 127, 8, 3216);
+    			attr_dev(input2, "type", "range");
+    			input2.value = input2_value_value = Math.round(/*data*/ ctx[0].reverb.gain).toString();
+    			attr_dev(input2, "min", "-60");
+    			attr_dev(input2, "max", "6");
+    			add_location(input2, file, 128, 8, 3259);
+    			attr_dev(div2, "class", "channel svelte-5v14zm");
+    			add_location(div2, file, 124, 6, 3144);
     			attr_dev(button0, "type", "button");
-    			add_location(button0, file, 149, 4, 3805);
+    			add_location(button0, file, 172, 4, 4563);
     			attr_dev(button1, "type", "button");
-    			add_location(button1, file, 152, 4, 3908);
+    			add_location(button1, file, 175, 4, 4666);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, div0, anchor);
@@ -477,31 +535,49 @@ var app = (function () {
     			insert_dev(target, t6, anchor);
     			insert_dev(target, div1, anchor);
     			append_dev(div1, i1);
-    			append_dev(div1, t7);
-    			append_dev(div1, span2);
+    			append_dev(div1, t8);
+    			append_dev(div1, select);
+
+    			for (let i = 0; i < each_blocks_1.length; i += 1) {
+    				each_blocks_1[i].m(select, null);
+    			}
+
     			append_dev(div1, t9);
-    			append_dev(div1, span3);
-    			append_dev(span3, t10);
-    			append_dev(span3, t11);
+    			append_dev(div1, span2);
+    			append_dev(span2, t10);
+    			append_dev(span2, t11);
     			append_dev(div1, t12);
     			append_dev(div1, input1);
     			insert_dev(target, t13, anchor);
+    			insert_dev(target, div2, anchor);
+    			append_dev(div2, i2);
+    			append_dev(div2, t14);
+    			append_dev(div2, span3);
+    			append_dev(div2, t16);
+    			append_dev(div2, span4);
+    			append_dev(span4, t17);
+    			append_dev(span4, t18);
+    			append_dev(div2, t19);
+    			append_dev(div2, input2);
+    			insert_dev(target, t20, anchor);
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].m(target, anchor);
     			}
 
-    			insert_dev(target, t14, anchor);
+    			insert_dev(target, t21, anchor);
     			insert_dev(target, button0, anchor);
-    			insert_dev(target, t16, anchor);
+    			insert_dev(target, t23, anchor);
     			insert_dev(target, button1, anchor);
     			if (remount) run_all(dispose);
 
     			dispose = [
-    				listen_dev(input0, "change", /*change_handler*/ ctx[10], false, false, false),
-    				listen_dev(input1, "change", /*change_handler_1*/ ctx[11], false, false, false),
-    				listen_dev(button0, "click", /*click_handler*/ ctx[15], false, false, false),
-    				listen_dev(button1, "click", /*click_handler_1*/ ctx[16], false, false, false)
+    				listen_dev(input0, "change", /*change_handler*/ ctx[11], false, false, false),
+    				listen_dev(select, "change", /*change_handler_1*/ ctx[12], false, false, false),
+    				listen_dev(input1, "change", /*change_handler_2*/ ctx[13], false, false, false),
+    				listen_dev(input2, "change", /*change_handler_3*/ ctx[14], false, false, false),
+    				listen_dev(button0, "click", /*click_handler*/ ctx[18], false, false, false),
+    				listen_dev(button1, "click", /*click_handler_1*/ ctx[19], false, false, false)
     			];
     		},
     		p: function update(ctx, dirty) {
@@ -511,13 +587,43 @@ var app = (function () {
     				prop_dev(input0, "value", input0_value_value);
     			}
 
+    			if (dirty & /*revTypes, data*/ 3) {
+    				each_value_1 = /*revTypes*/ ctx[1];
+    				validate_each_argument(each_value_1);
+    				let i;
+
+    				for (i = 0; i < each_value_1.length; i += 1) {
+    					const child_ctx = get_each_context_1(ctx, each_value_1, i);
+
+    					if (each_blocks_1[i]) {
+    						each_blocks_1[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks_1[i] = create_each_block_1(child_ctx);
+    						each_blocks_1[i].c();
+    						each_blocks_1[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks_1.length; i += 1) {
+    					each_blocks_1[i].d(1);
+    				}
+
+    				each_blocks_1.length = each_value_1.length;
+    			}
+
     			if (dirty & /*data*/ 1 && t10_value !== (t10_value = /*data*/ ctx[0].reverb.rt60 + "")) set_data_dev(t10, t10_value);
 
     			if (dirty & /*data*/ 1 && input1_value_value !== (input1_value_value = Math.round(/*data*/ ctx[0].reverb * 10).toString())) {
     				prop_dev(input1, "value", input1_value_value);
     			}
 
-    			if (dirty & /*Math, data, SendValue, Number*/ 3) {
+    			if (dirty & /*data*/ 1 && t17_value !== (t17_value = /*data*/ ctx[0].reverb.gain + "")) set_data_dev(t17, t17_value);
+
+    			if (dirty & /*data*/ 1 && input2_value_value !== (input2_value_value = Math.round(/*data*/ ctx[0].reverb.gain).toString())) {
+    				prop_dev(input2, "value", input2_value_value);
+    			}
+
+    			if (dirty & /*Math, data, SendValue, Number*/ 5) {
     				each_value = /*data*/ ctx[0].channels;
     				validate_each_argument(each_value);
     				let i;
@@ -530,7 +636,7 @@ var app = (function () {
     					} else {
     						each_blocks[i] = create_each_block(child_ctx);
     						each_blocks[i].c();
-    						each_blocks[i].m(t14.parentNode, t14);
+    						each_blocks[i].m(t21.parentNode, t21);
     					}
     				}
 
@@ -545,11 +651,14 @@ var app = (function () {
     			if (detaching) detach_dev(div0);
     			if (detaching) detach_dev(t6);
     			if (detaching) detach_dev(div1);
+    			destroy_each(each_blocks_1, detaching);
     			if (detaching) detach_dev(t13);
+    			if (detaching) detach_dev(div2);
+    			if (detaching) detach_dev(t20);
     			destroy_each(each_blocks, detaching);
-    			if (detaching) detach_dev(t14);
+    			if (detaching) detach_dev(t21);
     			if (detaching) detach_dev(button0);
-    			if (detaching) detach_dev(t16);
+    			if (detaching) detach_dev(t23);
     			if (detaching) detach_dev(button1);
     			run_all(dispose);
     		}
@@ -559,27 +668,151 @@ var app = (function () {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(90:2) {#if data != undefined}",
+    		source: "(94:2) {#if data != undefined}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (115:4) {#each data.channels as chan, i}
+    // (112:10) {:else}
+    function create_else_block(ctx) {
+    	let option;
+    	let t_value = /*rev*/ ctx[23] + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*i*/ ctx[22];
+    			option.value = option.__value;
+    			add_location(option, file, 112, 10, 2758);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_else_block.name,
+    		type: "else",
+    		source: "(112:10) {:else}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (110:10) {#if i == data.reverb.type}
+    function create_if_block_1(ctx) {
+    	let option;
+    	let t_value = /*rev*/ ctx[23] + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*i*/ ctx[22];
+    			option.value = option.__value;
+    			option.selected = true;
+    			add_location(option, file, 110, 10, 2688);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_1.name,
+    		type: "if",
+    		source: "(110:10) {#if i == data.reverb.type}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (109:8) {#each revTypes as rev, i}
+    function create_each_block_1(ctx) {
+    	let if_block_anchor;
+
+    	function select_block_type(ctx, dirty) {
+    		if (/*i*/ ctx[22] == /*data*/ ctx[0].reverb.type) return create_if_block_1;
+    		return create_else_block;
+    	}
+
+    	let current_block_type = select_block_type(ctx);
+    	let if_block = current_block_type(ctx);
+
+    	const block = {
+    		c: function create() {
+    			if_block.c();
+    			if_block_anchor = empty();
+    		},
+    		m: function mount(target, anchor) {
+    			if_block.m(target, anchor);
+    			insert_dev(target, if_block_anchor, anchor);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block) {
+    				if_block.p(ctx, dirty);
+    			} else {
+    				if_block.d(1);
+    				if_block = current_block_type(ctx);
+
+    				if (if_block) {
+    					if_block.c();
+    					if_block.m(if_block_anchor.parentNode, if_block_anchor);
+    				}
+    			}
+    		},
+    		d: function destroy(detaching) {
+    			if_block.d(detaching);
+    			if (detaching) detach_dev(if_block_anchor);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_1.name,
+    		type: "each",
+    		source: "(109:8) {#each revTypes as rev, i}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (138:4) {#each data.channels as chan, i}
     function create_each_block(ctx) {
     	let div0;
     	let i0;
     	let t0;
-    	let t1_value = /*i*/ ctx[19] + 1 + "";
+    	let t1_value = /*i*/ ctx[22] + 1 + "";
     	let t1;
     	let t2;
     	let span0;
-    	let t3_value = /*chan*/ ctx[17].name + "";
+    	let t3_value = /*chan*/ ctx[20].name + "";
     	let t3;
     	let t4;
     	let span1;
-    	let t5_value = /*chan*/ ctx[17].gain + "";
+    	let t5_value = /*chan*/ ctx[20].gain + "";
     	let t5;
     	let t6;
     	let t7;
@@ -592,7 +825,7 @@ var app = (function () {
     	let span2;
     	let t11;
     	let span3;
-    	let t12_value = /*chan*/ ctx[17].pan + "";
+    	let t12_value = /*chan*/ ctx[20].pan + "";
     	let t12;
     	let t13;
     	let t14;
@@ -605,7 +838,7 @@ var app = (function () {
     	let span4;
     	let t18;
     	let span5;
-    	let t19_value = /*chan*/ ctx[17].send + "";
+    	let t19_value = /*chan*/ ctx[20].send + "";
     	let t19;
     	let t20;
     	let t21;
@@ -613,16 +846,16 @@ var app = (function () {
     	let input2_value_value;
     	let dispose;
 
-    	function change_handler_2(...args) {
-    		return /*change_handler_2*/ ctx[12](/*i*/ ctx[19], ...args);
-    	}
-
-    	function change_handler_3(...args) {
-    		return /*change_handler_3*/ ctx[13](/*i*/ ctx[19], ...args);
-    	}
-
     	function change_handler_4(...args) {
-    		return /*change_handler_4*/ ctx[14](/*i*/ ctx[19], ...args);
+    		return /*change_handler_4*/ ctx[15](/*i*/ ctx[22], ...args);
+    	}
+
+    	function change_handler_5(...args) {
+    		return /*change_handler_5*/ ctx[16](/*i*/ ctx[22], ...args);
+    	}
+
+    	function change_handler_6(...args) {
+    		return /*change_handler_6*/ ctx[17](/*i*/ ctx[22], ...args);
     	}
 
     	const block = {
@@ -664,36 +897,36 @@ var app = (function () {
     			t20 = text(" dB");
     			t21 = space();
     			input2 = element("input");
-    			add_location(i0, file, 116, 8, 2808);
-    			add_location(span0, file, 117, 8, 2832);
-    			add_location(span1, file, 118, 8, 2865);
+    			add_location(i0, file, 139, 8, 3566);
+    			add_location(span0, file, 140, 8, 3590);
+    			add_location(span1, file, 141, 8, 3623);
     			attr_dev(input0, "type", "range");
-    			input0.value = input0_value_value = Math.round(/*chan*/ ctx[17].gain).toString();
+    			input0.value = input0_value_value = Math.round(/*chan*/ ctx[20].gain).toString();
     			attr_dev(input0, "min", "-60");
     			attr_dev(input0, "max", "6");
-    			add_location(input0, file, 119, 8, 2901);
-    			attr_dev(div0, "class", "channel svelte-viunz7");
-    			add_location(div0, file, 115, 6, 2778);
-    			add_location(i1, file, 127, 8, 3156);
-    			add_location(span2, file, 128, 8, 3172);
-    			add_location(span3, file, 129, 8, 3197);
+    			add_location(input0, file, 142, 8, 3659);
+    			attr_dev(div0, "class", "channel svelte-5v14zm");
+    			add_location(div0, file, 138, 6, 3536);
+    			add_location(i1, file, 150, 8, 3914);
+    			add_location(span2, file, 151, 8, 3930);
+    			add_location(span3, file, 152, 8, 3955);
     			attr_dev(input1, "type", "range");
-    			input1.value = input1_value_value = Math.round(/*chan*/ ctx[17].pan).toString();
+    			input1.value = input1_value_value = Math.round(/*chan*/ ctx[20].pan).toString();
     			attr_dev(input1, "min", "0");
     			attr_dev(input1, "max", "100");
-    			add_location(input1, file, 130, 8, 3231);
-    			attr_dev(div1, "class", "channel svelte-viunz7");
-    			add_location(div1, file, 126, 6, 3126);
-    			add_location(i2, file, 138, 8, 3484);
-    			add_location(span4, file, 139, 8, 3500);
-    			add_location(span5, file, 140, 8, 3533);
+    			add_location(input1, file, 153, 8, 3989);
+    			attr_dev(div1, "class", "channel svelte-5v14zm");
+    			add_location(div1, file, 149, 6, 3884);
+    			add_location(i2, file, 161, 8, 4242);
+    			add_location(span4, file, 162, 8, 4258);
+    			add_location(span5, file, 163, 8, 4291);
     			attr_dev(input2, "type", "range");
-    			input2.value = input2_value_value = Math.round(/*chan*/ ctx[17].send).toString();
+    			input2.value = input2_value_value = Math.round(/*chan*/ ctx[20].send).toString();
     			attr_dev(input2, "min", "-60");
     			attr_dev(input2, "max", "20");
-    			add_location(input2, file, 141, 8, 3569);
-    			attr_dev(div2, "class", "channel svelte-viunz7");
-    			add_location(div2, file, 137, 6, 3454);
+    			add_location(input2, file, 164, 8, 4327);
+    			attr_dev(div2, "class", "channel svelte-5v14zm");
+    			add_location(div2, file, 160, 6, 4212);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, div0, anchor);
@@ -734,29 +967,29 @@ var app = (function () {
     			if (remount) run_all(dispose);
 
     			dispose = [
-    				listen_dev(input0, "change", change_handler_2, false, false, false),
-    				listen_dev(input1, "change", change_handler_3, false, false, false),
-    				listen_dev(input2, "change", change_handler_4, false, false, false)
+    				listen_dev(input0, "change", change_handler_4, false, false, false),
+    				listen_dev(input1, "change", change_handler_5, false, false, false),
+    				listen_dev(input2, "change", change_handler_6, false, false, false)
     			];
     		},
     		p: function update(new_ctx, dirty) {
     			ctx = new_ctx;
-    			if (dirty & /*data*/ 1 && t3_value !== (t3_value = /*chan*/ ctx[17].name + "")) set_data_dev(t3, t3_value);
-    			if (dirty & /*data*/ 1 && t5_value !== (t5_value = /*chan*/ ctx[17].gain + "")) set_data_dev(t5, t5_value);
+    			if (dirty & /*data*/ 1 && t3_value !== (t3_value = /*chan*/ ctx[20].name + "")) set_data_dev(t3, t3_value);
+    			if (dirty & /*data*/ 1 && t5_value !== (t5_value = /*chan*/ ctx[20].gain + "")) set_data_dev(t5, t5_value);
 
-    			if (dirty & /*data*/ 1 && input0_value_value !== (input0_value_value = Math.round(/*chan*/ ctx[17].gain).toString())) {
+    			if (dirty & /*data*/ 1 && input0_value_value !== (input0_value_value = Math.round(/*chan*/ ctx[20].gain).toString())) {
     				prop_dev(input0, "value", input0_value_value);
     			}
 
-    			if (dirty & /*data*/ 1 && t12_value !== (t12_value = /*chan*/ ctx[17].pan + "")) set_data_dev(t12, t12_value);
+    			if (dirty & /*data*/ 1 && t12_value !== (t12_value = /*chan*/ ctx[20].pan + "")) set_data_dev(t12, t12_value);
 
-    			if (dirty & /*data*/ 1 && input1_value_value !== (input1_value_value = Math.round(/*chan*/ ctx[17].pan).toString())) {
+    			if (dirty & /*data*/ 1 && input1_value_value !== (input1_value_value = Math.round(/*chan*/ ctx[20].pan).toString())) {
     				prop_dev(input1, "value", input1_value_value);
     			}
 
-    			if (dirty & /*data*/ 1 && t19_value !== (t19_value = /*chan*/ ctx[17].send + "")) set_data_dev(t19, t19_value);
+    			if (dirty & /*data*/ 1 && t19_value !== (t19_value = /*chan*/ ctx[20].send + "")) set_data_dev(t19, t19_value);
 
-    			if (dirty & /*data*/ 1 && input2_value_value !== (input2_value_value = Math.round(/*chan*/ ctx[17].send).toString())) {
+    			if (dirty & /*data*/ 1 && input2_value_value !== (input2_value_value = Math.round(/*chan*/ ctx[20].send).toString())) {
     				prop_dev(input2, "value", input2_value_value);
     			}
     		},
@@ -774,7 +1007,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(115:4) {#each data.channels as chan, i}",
+    		source: "(138:4) {#each data.channels as chan, i}",
     		ctx
     	});
 
@@ -789,7 +1022,7 @@ var app = (function () {
     		c: function create() {
     			main = element("main");
     			if (if_block) if_block.c();
-    			add_location(main, file, 88, 0, 1992);
+    			add_location(main, file, 92, 0, 2087);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -838,6 +1071,7 @@ var app = (function () {
     	let socketConnected = false;
     	let gain = 0;
     	let data = undefined;
+    	let revTypes = ["STREV", "PROG2", "ZREV2", "NREVB"];
 
     	function SendValue(_idx, _section, _type, _val) {
     		let _data = JSON.parse(JSON.stringify(data));
@@ -927,15 +1161,17 @@ var app = (function () {
     	let { $$slots = {}, $$scope } = $$props;
     	validate_slots("App", $$slots, []);
     	const change_handler = e => SendValue(undefined, "master", "gain", Number(e.target.value));
-    	const change_handler_1 = e => SendValue(undefined, "reverb", "rt60", Number(e.target.value) / 10);
-    	const change_handler_2 = (i, e) => SendValue(i, "channels", "gain", Number(e.target.value));
-    	const change_handler_3 = (i, e) => SendValue(i, "channels", "pan", Number(e.target.value));
-    	const change_handler_4 = (i, e) => SendValue(i, "channels", "send", Number(e.target.value));
+    	const change_handler_1 = e => SendValue(undefined, "reverb", "type", Number(e.target.value));
+    	const change_handler_2 = e => SendValue(undefined, "reverb", "rt60", Number(e.target.value) / 10);
+    	const change_handler_3 = e => SendValue(undefined, "reverb", "gain", Number(e.target.value));
+    	const change_handler_4 = (i, e) => SendValue(i, "channels", "gain", Number(e.target.value));
+    	const change_handler_5 = (i, e) => SendValue(i, "channels", "pan", Number(e.target.value));
+    	const change_handler_6 = (i, e) => SendValue(i, "channels", "send", Number(e.target.value));
     	const click_handler = () => AddChannel(false);
     	const click_handler_1 = () => AddChannel(true);
 
     	$$self.$set = $$props => {
-    		if ("name" in $$props) $$invalidate(3, name = $$props.name);
+    		if ("name" in $$props) $$invalidate(4, name = $$props.name);
     	};
 
     	$$self.$capture_state = () => ({
@@ -947,6 +1183,7 @@ var app = (function () {
     		socketConnected,
     		gain,
     		data,
+    		revTypes,
     		SendValue,
     		RecvMsg,
     		Connect,
@@ -954,12 +1191,13 @@ var app = (function () {
     	});
 
     	$$self.$inject_state = $$props => {
-    		if ("name" in $$props) $$invalidate(3, name = $$props.name);
+    		if ("name" in $$props) $$invalidate(4, name = $$props.name);
     		if ("port" in $$props) port = $$props.port;
     		if ("socket" in $$props) socket = $$props.socket;
     		if ("socketConnected" in $$props) socketConnected = $$props.socketConnected;
     		if ("gain" in $$props) gain = $$props.gain;
     		if ("data" in $$props) $$invalidate(0, data = $$props.data);
+    		if ("revTypes" in $$props) $$invalidate(1, revTypes = $$props.revTypes);
     	};
 
     	if ($$props && "$$inject" in $$props) {
@@ -968,6 +1206,7 @@ var app = (function () {
 
     	return [
     		data,
+    		revTypes,
     		SendValue,
     		AddChannel,
     		name,
@@ -982,6 +1221,8 @@ var app = (function () {
     		change_handler_2,
     		change_handler_3,
     		change_handler_4,
+    		change_handler_5,
+    		change_handler_6,
     		click_handler,
     		click_handler_1
     	];
@@ -990,7 +1231,7 @@ var app = (function () {
     class App extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance, create_fragment, safe_not_equal, { name: 3 });
+    		init(this, options, instance, create_fragment, safe_not_equal, { name: 4 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
@@ -1002,7 +1243,7 @@ var app = (function () {
     		const { ctx } = this.$$;
     		const props = options.props || {};
 
-    		if (/*name*/ ctx[3] === undefined && !("name" in props)) {
+    		if (/*name*/ ctx[4] === undefined && !("name" in props)) {
     			console_1.warn("<App> was created without expected prop 'name'");
     		}
     	}

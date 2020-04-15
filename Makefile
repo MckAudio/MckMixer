@@ -28,8 +28,8 @@ LIBS += -lwebsockets
 
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 
-LSRCS = ./src/main.cpp ./src/MckTypes.cpp ./src/MckMixer.cpp
-LMINCS = -I./src -I/usr/local/include/libfreeverb3-3 -I./uWebSockets/src -I./uWebSockets/uSockets/src -I./json/single_include
+LSRCS = ./src/main.cpp ./src/MckTypes.cpp ./src/MckMixer.cpp ./helper/JackHelper.cpp
+LMINCS = -I./src -I./helper -I/usr/local/include/libfreeverb3-3 -I./uWebSockets/src -I./uWebSockets/uSockets/src -I./json/single_include
 LMLIBS = -L/usr/local/lib -lfreeverb3 -ljack ./uWebSockets/uSockets/*.o -lz
 
 

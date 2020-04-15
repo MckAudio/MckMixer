@@ -65,11 +65,17 @@ bool mck::Mixer::Init(std::string path)
     memset(m_delayBuffer[0], 0, m_bufferSize * sizeof(jack_default_audio_sample_t));
     memset(m_delayBuffer[1], 0, m_bufferSize * sizeof(jack_default_audio_sample_t));
 
-    m_reverb = new fv3::strev_f();
-    m_reverb->setSampleRate(m_sampleRate);
-    m_reverb->setwet(0.0);
-    m_reverb->setdry(-200.0);
-
+    m_reverb = (fv3::revbase_f **)malloc(REV_LENGTH * sizeof(fv3::revbase_f *));
+    m_reverb[REV_STREV] = new fv3::strev_f();
+    m_reverb[REV_PROG] = new fv3::progenitor2_f();
+    m_reverb[REV_ZREV] = new fv3::zrev2_f();
+    m_reverb[REV_NREV] = new fv3::nrevb_f();
+    for (unsigned i = 0; i < REV_LENGTH; i++)
+    {
+        m_reverb[i]->setSampleRate(m_sampleRate);
+        m_reverb[i]->setwet(0.0);
+        m_reverb[i]->setdry(-200.0);
+    }
     // Read Configuration
     mck::Config newConfig;
     bool createFile = LoadConfig(newConfig, path) == false;
@@ -81,13 +87,13 @@ bool mck::Mixer::Init(std::string path)
 
     m_path = fs::path(path);
 
-    SetConfig(newConfig);
-
     if (jack_activate(m_client))
     {
         std::fprintf(stderr, "Unable to activate JACK client!\n");
         return false;
     }
+
+    SetConfig(newConfig);
 
     m_isInitialized = true;
     return true;
@@ -100,14 +106,22 @@ void mck::Mixer::Close()
         return;
     }
 
-    SaveConfig(m_config[m_activeConfig], m_path.string());
 
-    // Save Connections here
 
     if (m_client != nullptr)
     {
+        // Save Connections here
+        std::vector<std::string> cons;
+        mck::GetConnections(m_client, m_audioOut[0], cons);
+        m_config[m_activeConfig].targetLeft = cons;
+
+        mck::GetConnections(m_client, m_audioOut[1], cons);
+        m_config[m_activeConfig].targetRight = cons;
+
         jack_client_close(m_client);
     }
+
+    SaveConfig(m_config[m_activeConfig], m_path.string());
 
     free(m_audioIn);
     free(m_interpolLin);
@@ -142,6 +156,15 @@ bool mck::Mixer::SetConfig(mck::Config &config)
     {
         config.gainLin = std::pow(10.0, config.gain / 20.0);
     }
+    if (config.reverb.gain <= -200.0)
+    {
+        config.reverb.gainLin = 0.0;
+        config.reverb.gain = -200.0;
+    }
+    else
+    {
+        config.reverb.gainLin = std::pow(10.0, config.reverb.gain / 20.0);
+    }
     for (unsigned i = 0; i < config.channels.size(); i++)
     {
         if (config.channels[i].isStereo)
@@ -175,7 +198,19 @@ bool mck::Mixer::SetConfig(mck::Config &config)
             config.channels[i].sendLin = std::pow(10.0, config.channels[i].send / 20.0);
         }
     }
+    config.reverb.type = std::min(config.reverb.type, (unsigned) (REV_LENGTH - 1));
     config.channelCount = config.channels.size();
+
+
+    // Connect Output Channels
+    if (mck::NewConnections(m_client, m_audioOut[0], config.targetLeft)) {
+        mck::SetConnections(m_client, m_audioOut[0], config.targetLeft, false);
+    }
+    if (mck::NewConnections(m_client, m_audioOut[1], config.targetRight)) {
+        mck::SetConnections(m_client, m_audioOut[1], config.targetRight, false);
+    }
+
+
     m_config[m_newConfig] = config;
     m_nInputChans[m_newConfig] = nChans;
 
@@ -220,7 +255,8 @@ bool mck::Mixer::AddChannel(bool isStereo, mck::Config &outConfig)
 
     bool ret = SetConfig(outConfig);
 
-    if (ret == false) {
+    if (ret == false)
+    {
         GetConfig(outConfig);
     }
 
@@ -384,11 +420,11 @@ void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
     }
 
     // Reverb Processing
-    ProcessReverb(nframes, m_config[m_activeConfig].reverb.rt60);
+    ProcessReverb(nframes, m_config[m_activeConfig].reverb.rt60, m_config[m_activeConfig].reverb.type);
     for (unsigned s = 0; s < nframes; s++)
     {
-        m_bufferOut[0][s] += m_config[m_activeConfig].gainLin * m_reverbBuffer[0][s];
-        m_bufferOut[1][s] += m_config[m_activeConfig].gainLin * m_reverbBuffer[1][s];
+        m_bufferOut[0][s] += m_config[m_activeConfig].gainLin * m_config[m_activeConfig].reverb.gainLin * m_reverbBuffer[0][s];
+        m_bufferOut[1][s] += m_config[m_activeConfig].gainLin * m_config[m_activeConfig].reverb.gainLin * m_reverbBuffer[1][s];
     }
 
     if (updateValues)
@@ -410,12 +446,42 @@ void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
     reverb->processreplace(in_l, in_r, out_l, out_r, nframes);*/
 }
 
-void mck::Mixer::ProcessReverb(jack_nframes_t nframes, float rt60)
+void mck::Mixer::ProcessReverb(jack_nframes_t nframes, float rt60, unsigned type)
 {
-    if (((fv3::strev_f *)m_reverb)->getrt60() != rt60) {
-        ((fv3::strev_f *)m_reverb)->setrt60(rt60);
+    if (type >= REV_LENGTH)
+    {
+        return;
     }
-    m_reverb->processreplace(m_reverbBuffer[0], m_reverbBuffer[1], m_reverbBuffer[0], m_reverbBuffer[1], nframes);
+    switch (type)
+    {
+    case REV_STREV:
+        if (((fv3::strev_f *)m_reverb[type])->getrt60() != rt60)
+        {
+            ((fv3::strev_f *)m_reverb[type])->setrt60(rt60);
+        }
+        break;
+    case REV_PROG:
+        if (((fv3::progenitor2_f *)m_reverb[type])->getrt60() != rt60)
+        {
+            ((fv3::progenitor2_f *)m_reverb[type])->setrt60(rt60);
+        }
+        break;
+    case REV_ZREV:
+        if (((fv3::zrev2_f *)m_reverb[type])->getrt60() != rt60)
+        {
+            ((fv3::zrev2_f *)m_reverb[type])->setrt60(rt60);
+        }
+        break;
+    case REV_NREV:
+        if (((fv3::nrevb_f *)m_reverb[type])->getrt60() != rt60)
+        {
+            ((fv3::nrevb_f *)m_reverb[type])->setrt60(rt60);
+        }
+        break;
+    default:
+        return;
+    }
+    m_reverb[type]->processreplace(m_reverbBuffer[0], m_reverbBuffer[1], m_reverbBuffer[0], m_reverbBuffer[1], nframes);
 }
 
 // File Handling

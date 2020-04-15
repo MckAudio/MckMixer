@@ -9,6 +9,8 @@
   let gain = 0.0;
   let data = undefined;
 
+  let revTypes = ["STREV", "PROG2", "ZREV2", "NREVB"];
+
   function SendValue(_idx, _section, _type, _val) {
     let _data = JSON.parse(JSON.stringify(data));
     if (_section == "channels") {
@@ -82,7 +84,9 @@
   .channel {
     padding: 16px;
     display: grid;
-    grid-template-columns: 25px 1fr 50px 2fr;
+    grid-template-columns: 40px 1fr 50px 2fr;
+    column-gap: 4px;
+    row-gap: 4px;
   }
 </style>
 
@@ -100,8 +104,16 @@
           on:change={e => SendValue(undefined, 'master', 'gain', Number(e.target.value))} />
       </div>
       <div class="channel">
-        <i></i>
-        <span>Master</span>
+        <i>REV</i>
+        <select on:change={e => SendValue(undefined, 'reverb', 'type', Number(e.target.value))}>
+        {#each revTypes as rev, i}
+          {#if i == data.reverb.type}
+          <option value={i} selected>{rev}</option>
+          {:else}
+          <option value={i}>{rev}</option>
+          {/if}
+          {/each}
+        </select>
         <span>{data.reverb.rt60} s</span>
         <input
           type="range"
@@ -109,6 +121,17 @@
           min="5.0"
           max="100.0"
           on:change={e => SendValue(undefined, 'reverb', 'rt60', Number(e.target.value) / 10.0)} />
+      </div>
+      <div class="channel">
+        <i></i>
+        <span>Gain</span>
+        <span>{data.reverb.gain} dB</span>
+        <input
+          type="range"
+          value={Math.round(data.reverb.gain).toString()}
+          min="-60"
+          max="6"
+          on:change={e => SendValue(undefined, 'reverb', 'gain', Number(e.target.value))} />
       </div>
 
 
