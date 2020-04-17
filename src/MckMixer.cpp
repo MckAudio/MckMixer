@@ -65,6 +65,7 @@ bool mck::Mixer::Init(std::string path)
     memset(m_delayBuffer[0], 0, m_bufferSize * sizeof(jack_default_audio_sample_t));
     memset(m_delayBuffer[1], 0, m_bufferSize * sizeof(jack_default_audio_sample_t));
 
+    // Reverb
     m_reverb = (fv3::revbase_f **)malloc(REV_LENGTH * sizeof(fv3::revbase_f *));
     m_reverb[REV_STREV] = new fv3::strev_f();
     m_reverb[REV_PROG] = new fv3::progenitor2_f();
@@ -76,6 +77,10 @@ bool mck::Mixer::Init(std::string path)
         m_reverb[i]->setwet(0.0);
         m_reverb[i]->setdry(-200.0);
     }
+
+    // Delay
+    m_delay.Init(m_sampleRate, m_bufferSize);
+
     // Read Configuration
     mck::Config newConfig;
     bool createFile = LoadConfig(newConfig, path) == false;
@@ -106,8 +111,6 @@ void mck::Mixer::Close()
         return;
     }
 
-
-
     if (m_client != nullptr)
     {
         // Save Connections here
@@ -132,6 +135,12 @@ void mck::Mixer::Close()
     free(m_delayBuffer[0]);
     free(m_delayBuffer[1]);
 
+    for (unsigned i = 0; i < REV_LENGTH; i++)
+    {
+        delete m_reverb[i];
+    }
+    free(m_reverb);
+
     m_isInitialized = false;
 }
 
@@ -147,24 +156,10 @@ bool mck::Mixer::SetConfig(mck::Config &config)
     m_newConfig = 1 - m_activeConfig;
 
     // Convert Gain dB to lin
-    if (config.gain <= -200.0)
-    {
-        config.gainLin = 0.0;
-        config.gain = -200.0;
-    }
-    else
-    {
-        config.gainLin = std::pow(10.0, config.gain / 20.0);
-    }
-    if (config.reverb.gain <= -200.0)
-    {
-        config.reverb.gainLin = 0.0;
-        config.reverb.gain = -200.0;
-    }
-    else
-    {
-        config.reverb.gainLin = std::pow(10.0, config.reverb.gain / 20.0);
-    }
+    config.gainLin = mck::DbToLin(config.gain);
+    config.reverb.gainLin = mck::DbToLin(config.reverb.gain);
+    config.delay.gainLin = mck::DbToLin(config.delay.gain);
+
     for (unsigned i = 0; i < config.channels.size(); i++)
     {
         if (config.channels[i].isStereo)
@@ -178,38 +173,22 @@ bool mck::Mixer::SetConfig(mck::Config &config)
 
         config.channels[i].pan = std::min(100.0, std::max(0.0, config.channels[i].pan));
 
-        if (config.channels[i].gain <= -200.0)
-        {
-            config.channels[i].gainLin = 0.0;
-            config.channels[i].gain = -200.0;
-        }
-        else
-        {
-            config.channels[i].gainLin = std::pow(10.0, config.channels[i].gain / 20.0);
-        }
-
-        if (config.channels[i].send <= -200.0)
-        {
-            config.channels[i].sendLin = 0.0;
-            config.channels[i].send = -200.0;
-        }
-        else
-        {
-            config.channels[i].sendLin = std::pow(10.0, config.channels[i].send / 20.0);
-        }
+        config.channels[i].gainLin = mck::DbToLin(config.channels[i].gain);
+        config.channels[i].sendReverbLin = mck::DbToLin(config.channels[i].sendReverb);
+        config.channels[i].sendDelayLin = mck::DbToLin(config.channels[i].sendDelay);
     }
-    config.reverb.type = std::min(config.reverb.type, (unsigned) (REV_LENGTH - 1));
+    config.reverb.type = std::min(config.reverb.type, (unsigned)(REV_LENGTH - 1));
     config.channelCount = config.channels.size();
 
-
     // Connect Output Channels
-    if (mck::NewConnections(m_client, m_audioOut[0], config.targetLeft)) {
+    if (mck::NewConnections(m_client, m_audioOut[0], config.targetLeft))
+    {
         mck::SetConnections(m_client, m_audioOut[0], config.targetLeft, false);
     }
-    if (mck::NewConnections(m_client, m_audioOut[1], config.targetRight)) {
+    if (mck::NewConnections(m_client, m_audioOut[1], config.targetRight))
+    {
         mck::SetConnections(m_client, m_audioOut[1], config.targetRight, false);
     }
-
 
     m_config[m_newConfig] = config;
     m_nInputChans[m_newConfig] = nChans;
@@ -387,7 +366,8 @@ void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
     {
         panR = std::sqrt(m_config[m_activeConfig].channels[i].pan / 100.0);
         panL = std::sqrt(1.0 - m_config[m_activeConfig].channels[i].pan / 100.0);
-        revSend = m_config[m_activeConfig].channels[i].sendLin;
+        revSend = m_config[m_activeConfig].channels[i].sendReverbLin;
+        dlySend = m_config[m_activeConfig].channels[i].sendDelayLin;
 
         if (m_config[m_activeConfig].channels[i].isStereo)
         {
@@ -400,6 +380,10 @@ void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
                 // Reverb
                 m_reverbBuffer[0][s] += revSend * panL * m_bufferIn[j][s];
                 m_reverbBuffer[1][s] += revSend * panR * m_bufferIn[j + 1][s];
+
+                // Delay
+                m_delayBuffer[0][s] += dlySend * panL * m_bufferIn[j][s];
+                m_delayBuffer[1][s] += dlySend * panR * m_bufferIn[j + 1][s];
             }
 
             j++;
@@ -415,16 +399,27 @@ void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
                 // Reverb
                 m_reverbBuffer[0][s] += revSend * panL * m_bufferIn[j][s];
                 m_reverbBuffer[1][s] += revSend * panR * m_bufferIn[j][s];
+
+                // Delay
+                m_delayBuffer[0][s] += dlySend * panL * m_bufferIn[j][s];
+                m_delayBuffer[1][s] += dlySend * panR * m_bufferIn[j][s];
             }
         }
     }
 
     // Reverb Processing
     ProcessReverb(nframes, m_config[m_activeConfig].reverb.rt60, m_config[m_activeConfig].reverb.type);
+
+    // Delay Processing
+    ProcessDelay(nframes, m_config[m_activeConfig].delay.delay, m_config[m_activeConfig].delay.feedback);
+
     for (unsigned s = 0; s < nframes; s++)
     {
         m_bufferOut[0][s] += m_config[m_activeConfig].gainLin * m_config[m_activeConfig].reverb.gainLin * m_reverbBuffer[0][s];
         m_bufferOut[1][s] += m_config[m_activeConfig].gainLin * m_config[m_activeConfig].reverb.gainLin * m_reverbBuffer[1][s];
+
+        m_bufferOut[0][s] += m_config[m_activeConfig].gainLin * m_config[m_activeConfig].delay.gainLin * m_delayBuffer[0][s];
+        m_bufferOut[1][s] += m_config[m_activeConfig].gainLin * m_config[m_activeConfig].delay.gainLin * m_delayBuffer[1][s];
     }
 
     if (updateValues)
@@ -482,6 +477,21 @@ void mck::Mixer::ProcessReverb(jack_nframes_t nframes, float rt60, unsigned type
         return;
     }
     m_reverb[type]->processreplace(m_reverbBuffer[0], m_reverbBuffer[1], m_reverbBuffer[0], m_reverbBuffer[1], nframes);
+}
+
+void mck::Mixer::ProcessDelay(jack_nframes_t nframes, double delay, double feedback)
+{
+    if (delay != m_delay.GetDelayTime())
+    {
+        m_delay.SetDelayTime(delay);
+    }
+
+    if (feedback != m_delay.GetFeedback())
+    {
+        m_delay.SetFeedback(feedback);
+    }
+
+    m_delay.ProcessAudio(m_delayBuffer[0], m_delayBuffer[1]);
 }
 
 // File Handling

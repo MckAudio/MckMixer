@@ -1,6 +1,7 @@
 CXX = g++
 
 DEB_FLAGS = -O0 -DDEBUG -ggdb3
+REL_FLAGS = -O2 -DNDEBUG
 
 BIN = simpleguirev
 SOURCES = ./src/guirev.cpp
@@ -28,12 +29,16 @@ LIBS += -lwebsockets
 
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 
-LSRCS = ./src/main.cpp ./src/MckTypes.cpp ./src/MckMixer.cpp ./helper/JackHelper.cpp
+LSRCS = ./src/main.cpp ./src/MckTypes.cpp ./src/MckMixer.cpp ./src/MckDelay.cpp ./helper/JackHelper.cpp ./helper/DspHelper.cpp
 LMINCS = -I./src -I./helper -I/usr/local/include/libfreeverb3-3 -I./uWebSockets/src -I./uWebSockets/uSockets/src -I./json/single_include
 LMLIBS = -L/usr/local/lib -lfreeverb3 -ljack ./uWebSockets/uSockets/*.o -lz
 
 
-default:
+release:
+	cd ./uWebSockets/uSockets && make
+	g++ $(LSRCS) -o mck-mixer $(REL_FLAGS) --std=c++17 $(LMINCS) $(LMLIBS)
+
+debug:
 	cd ./uWebSockets/uSockets && make
 	g++ $(LSRCS) -o mck-mixer $(DEB_FLAGS) --std=c++17 $(LMINCS) $(LMLIBS)
 
@@ -67,3 +72,5 @@ wxrev:
 	rm mck-* || true
 	rm *.o || true
 	rm bin/* || true
+	rm uWebSockets/uSockets/*.o || true
+	rm uWebSockets/uSockets/*.a || true

@@ -33,9 +33,11 @@ namespace mck {
         double gain;
         double gainLin;
         double pan;
-        double send;
-        double sendLin;
-        Channel() : name(""), isStereo(false), gain(-200.0), gainLin(0.0), pan(50.0), send(-200.0), sendLin(0.0), sourceLeft(""), sourceRight("") {
+        double sendReverb;
+        double sendReverbLin;
+        double sendDelay;
+        double sendDelayLin;
+        Channel() : name(""), isStereo(false), gain(-200.0), gainLin(0.0), pan(50.0), sendReverb(-200.0), sendReverbLin(0.0), sendDelay(-200.0), sendDelayLin(0.0), sourceLeft(""), sourceRight("") {
         }
     };
     void to_json(nlohmann::json &j, const Channel &c);
@@ -51,6 +53,18 @@ namespace mck {
     void to_json(nlohmann::json &j, const Reverb &r);
     void from_json(const nlohmann::json &j, Reverb &r);
 
+    struct Delay {
+        double gain;
+        double gainLin;
+        double delay;       // in Seconds
+        double feedback;    // in Db
+        unsigned type;
+        Delay() : gain(0.0), gainLin(1.0), delay(1.0), feedback(-200.0), type(0) {}
+    };
+    void to_json(nlohmann::json &j, const Delay &d);
+    void from_json(const nlohmann::json &j, Delay &d);
+
+
     struct Config {
         double gain;
         double gainLin;
@@ -59,7 +73,8 @@ namespace mck {
         std::vector<Channel> channels;
         unsigned channelCount;
         Reverb reverb;
-        Config() : gain(0.0), gainLin(1.0), targetLeft(), targetRight(), channels(), channelCount(0), reverb() {};
+        Delay delay;
+        Config() : gain(0.0), gainLin(1.0), targetLeft(), targetRight(), channels(), channelCount(0), reverb(), delay() {};
     };
     void to_json(nlohmann::json &j, const Config &c);
     void from_json(const nlohmann::json &j, Config &c);

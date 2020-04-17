@@ -1,6 +1,8 @@
 #pragma once
 
 #include "MckTypes.h"
+#include "MckDelay.h"
+#include "DspHelper.h"
 #include "JackHelper.h"
 
 // Audio
@@ -77,9 +79,10 @@ private:
     jack_default_audio_sample_t *m_delayBuffer[2];
 
     fv3::revbase_f **m_reverb;
+    mck::DelayDsp m_delay;
 
     void ProcessReverb(jack_nframes_t nframes, float rt60, unsigned type);
-
+    void ProcessDelay(jack_nframes_t nframes, double delay, double feedback);
     bool InitConfig(mck::Config &config);
     bool LoadConfig(mck::Config &config, std::string path);
     bool SaveConfig(mck::Config &config, std::string path);

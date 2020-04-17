@@ -19,6 +19,8 @@
       _data[_type] = _val;
     } else if (_section == "reverb") {
       _data.reverb[_type] = _val;
+    } else if (_section == "delay") {
+      _data.delay[_type] = _val;
     }
     let _msg = {
       msgType: "partial",
@@ -133,6 +135,39 @@
           max="6"
           on:change={e => SendValue(undefined, 'reverb', 'gain', Number(e.target.value))} />
       </div>
+      <div class="channel">
+        <i>dly</i>
+        <span></span>
+        <span>{data.delay.delay} s</span>
+        <input
+          type="range"
+          value={Math.round(data.delay * 10.0).toString()}
+          min="1.0"
+          max="50.0"
+          on:change={e => SendValue(undefined, 'delay', 'delay', Number(e.target.value) / 10.0)} />
+      </div>
+      <div class="channel">
+        <i></i>
+        <span>Feedback</span>
+        <span>{data.delay.feedback} dB</span>
+        <input
+          type="range"
+          value={Math.round(data.delay.feedback).toString()}
+          min="-60"
+          max="-3"
+          on:change={e => SendValue(undefined, 'delay', 'feedback', Number(e.target.value))} />
+      </div>
+      <div class="channel">
+        <i></i>
+        <span>Gain</span>
+        <span>{data.delay.gain} dB</span>
+        <input
+          type="range"
+          value={Math.round(data.delay.gain).toString()}
+          min="-60"
+          max="6"
+          on:change={e => SendValue(undefined, 'delay', 'gain', Number(e.target.value))} />
+      </div>
 
 
     {#each data.channels as chan, i}
@@ -161,13 +196,24 @@
       <div class="channel">
         <i></i>
         <span>Reverb Send</span>
-        <span>{chan.send} dB</span>
+        <span>{chan.sendReverb} dB</span>
         <input
           type="range"
-          value={Math.round(chan.send).toString()}
+          value={Math.round(chan.sendReverb).toString()}
           min="-60"
           max="20"
-          on:change={e => SendValue(i, 'channels', 'send', Number(e.target.value))} />
+          on:change={e => SendValue(i, 'channels', 'sendReverb', Number(e.target.value))} />
+      </div>
+      <div class="channel">
+        <i></i>
+        <span>Delay Send</span>
+        <span>{chan.sendDelay} dB</span>
+        <input
+          type="range"
+          value={Math.round(chan.sendDelay).toString()}
+          min="-60"
+          max="20"
+          on:change={e => SendValue(i, 'channels', 'sendDelay', Number(e.target.value))} />
       </div>
     {/each}
     <button type="button" on:click={() => AddChannel(false)}>

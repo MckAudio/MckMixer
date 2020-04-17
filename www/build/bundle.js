@@ -358,19 +358,19 @@ var app = (function () {
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[20] = list[i];
-    	child_ctx[22] = i;
+    	child_ctx[24] = list[i];
+    	child_ctx[26] = i;
     	return child_ctx;
     }
 
     function get_each_context_1(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[23] = list[i];
-    	child_ctx[22] = i;
+    	child_ctx[27] = list[i];
+    	child_ctx[26] = i;
     	return child_ctx;
     }
 
-    // (94:2) {#if data != undefined}
+    // (96:2) {#if data != undefined}
     function create_if_block(ctx) {
     	let div0;
     	let i0;
@@ -411,9 +411,48 @@ var app = (function () {
     	let input2;
     	let input2_value_value;
     	let t20;
-    	let t21;
-    	let button0;
+    	let div3;
+    	let i3;
+    	let t22;
+    	let span5;
     	let t23;
+    	let span6;
+    	let t24_value = /*data*/ ctx[0].delay.delay + "";
+    	let t24;
+    	let t25;
+    	let t26;
+    	let input3;
+    	let input3_value_value;
+    	let t27;
+    	let div4;
+    	let i4;
+    	let t28;
+    	let span7;
+    	let t30;
+    	let span8;
+    	let t31_value = /*data*/ ctx[0].delay.feedback + "";
+    	let t31;
+    	let t32;
+    	let t33;
+    	let input4;
+    	let input4_value_value;
+    	let t34;
+    	let div5;
+    	let i5;
+    	let t35;
+    	let span9;
+    	let t37;
+    	let span10;
+    	let t38_value = /*data*/ ctx[0].delay.gain + "";
+    	let t38;
+    	let t39;
+    	let t40;
+    	let input5;
+    	let input5_value_value;
+    	let t41;
+    	let t42;
+    	let button0;
+    	let t44;
     	let button1;
     	let dispose;
     	let each_value_1 = /*revTypes*/ ctx[1];
@@ -475,51 +514,117 @@ var app = (function () {
     			t19 = space();
     			input2 = element("input");
     			t20 = space();
+    			div3 = element("div");
+    			i3 = element("i");
+    			i3.textContent = "dly";
+    			t22 = space();
+    			span5 = element("span");
+    			t23 = space();
+    			span6 = element("span");
+    			t24 = text(t24_value);
+    			t25 = text(" s");
+    			t26 = space();
+    			input3 = element("input");
+    			t27 = space();
+    			div4 = element("div");
+    			i4 = element("i");
+    			t28 = space();
+    			span7 = element("span");
+    			span7.textContent = "Feedback";
+    			t30 = space();
+    			span8 = element("span");
+    			t31 = text(t31_value);
+    			t32 = text(" dB");
+    			t33 = space();
+    			input4 = element("input");
+    			t34 = space();
+    			div5 = element("div");
+    			i5 = element("i");
+    			t35 = space();
+    			span9 = element("span");
+    			span9.textContent = "Gain";
+    			t37 = space();
+    			span10 = element("span");
+    			t38 = text(t38_value);
+    			t39 = text(" dB");
+    			t40 = space();
+    			input5 = element("input");
+    			t41 = space();
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].c();
     			}
 
-    			t21 = space();
+    			t42 = space();
     			button0 = element("button");
     			button0.textContent = "Add new mono channel";
-    			t23 = space();
+    			t44 = space();
     			button1 = element("button");
     			button1.textContent = "Add new stereo channel";
-    			add_location(i0, file, 95, 8, 2156);
-    			add_location(span0, file, 96, 8, 2172);
-    			add_location(span1, file, 97, 8, 2200);
+    			add_location(i0, file, 97, 8, 2227);
+    			add_location(span0, file, 98, 8, 2243);
+    			add_location(span1, file, 99, 8, 2271);
     			attr_dev(input0, "type", "range");
     			input0.value = input0_value_value = Math.round(/*data*/ ctx[0].gain).toString();
     			attr_dev(input0, "min", "-60");
     			attr_dev(input0, "max", "6");
-    			add_location(input0, file, 98, 8, 2236);
+    			add_location(input0, file, 100, 8, 2307);
     			attr_dev(div0, "class", "channel svelte-5v14zm");
-    			add_location(div0, file, 94, 6, 2126);
-    			add_location(i1, file, 106, 8, 2497);
-    			add_location(select, file, 107, 8, 2516);
-    			add_location(span2, file, 116, 8, 2851);
+    			add_location(div0, file, 96, 6, 2197);
+    			add_location(i1, file, 108, 8, 2568);
+    			add_location(select, file, 109, 8, 2587);
+    			add_location(span2, file, 118, 8, 2922);
     			attr_dev(input1, "type", "range");
     			input1.value = input1_value_value = Math.round(/*data*/ ctx[0].reverb * 10).toString();
     			attr_dev(input1, "min", "5.0");
     			attr_dev(input1, "max", "100.0");
-    			add_location(input1, file, 117, 8, 2893);
+    			add_location(input1, file, 119, 8, 2964);
     			attr_dev(div1, "class", "channel svelte-5v14zm");
-    			add_location(div1, file, 105, 6, 2467);
-    			add_location(i2, file, 125, 8, 3174);
-    			add_location(span3, file, 126, 8, 3190);
-    			add_location(span4, file, 127, 8, 3216);
+    			add_location(div1, file, 107, 6, 2538);
+    			add_location(i2, file, 127, 8, 3245);
+    			add_location(span3, file, 128, 8, 3261);
+    			add_location(span4, file, 129, 8, 3287);
     			attr_dev(input2, "type", "range");
     			input2.value = input2_value_value = Math.round(/*data*/ ctx[0].reverb.gain).toString();
     			attr_dev(input2, "min", "-60");
     			attr_dev(input2, "max", "6");
-    			add_location(input2, file, 128, 8, 3259);
+    			add_location(input2, file, 130, 8, 3330);
     			attr_dev(div2, "class", "channel svelte-5v14zm");
-    			add_location(div2, file, 124, 6, 3144);
+    			add_location(div2, file, 126, 6, 3215);
+    			add_location(i3, file, 138, 8, 3598);
+    			add_location(span5, file, 139, 8, 3617);
+    			add_location(span6, file, 140, 8, 3639);
+    			attr_dev(input3, "type", "range");
+    			input3.value = input3_value_value = Math.round(/*data*/ ctx[0].delay * 10).toString();
+    			attr_dev(input3, "min", "1.0");
+    			attr_dev(input3, "max", "50.0");
+    			add_location(input3, file, 141, 8, 3681);
+    			attr_dev(div3, "class", "channel svelte-5v14zm");
+    			add_location(div3, file, 137, 6, 3568);
+    			add_location(i4, file, 149, 8, 3960);
+    			add_location(span7, file, 150, 8, 3976);
+    			add_location(span8, file, 151, 8, 4006);
+    			attr_dev(input4, "type", "range");
+    			input4.value = input4_value_value = Math.round(/*data*/ ctx[0].delay.feedback).toString();
+    			attr_dev(input4, "min", "-60");
+    			attr_dev(input4, "max", "-3");
+    			add_location(input4, file, 152, 8, 4052);
+    			attr_dev(div4, "class", "channel svelte-5v14zm");
+    			add_location(div4, file, 148, 6, 3930);
+    			add_location(i5, file, 160, 8, 4327);
+    			add_location(span9, file, 161, 8, 4343);
+    			add_location(span10, file, 162, 8, 4369);
+    			attr_dev(input5, "type", "range");
+    			input5.value = input5_value_value = Math.round(/*data*/ ctx[0].delay.gain).toString();
+    			attr_dev(input5, "min", "-60");
+    			attr_dev(input5, "max", "6");
+    			add_location(input5, file, 163, 8, 4411);
+    			attr_dev(div5, "class", "channel svelte-5v14zm");
+    			add_location(div5, file, 159, 6, 4297);
     			attr_dev(button0, "type", "button");
-    			add_location(button0, file, 172, 4, 4563);
+    			add_location(button0, file, 218, 4, 6086);
     			attr_dev(button1, "type", "button");
-    			add_location(button1, file, 175, 4, 4666);
+    			add_location(button1, file, 221, 4, 6189);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, div0, anchor);
@@ -560,14 +665,47 @@ var app = (function () {
     			append_dev(div2, t19);
     			append_dev(div2, input2);
     			insert_dev(target, t20, anchor);
+    			insert_dev(target, div3, anchor);
+    			append_dev(div3, i3);
+    			append_dev(div3, t22);
+    			append_dev(div3, span5);
+    			append_dev(div3, t23);
+    			append_dev(div3, span6);
+    			append_dev(span6, t24);
+    			append_dev(span6, t25);
+    			append_dev(div3, t26);
+    			append_dev(div3, input3);
+    			insert_dev(target, t27, anchor);
+    			insert_dev(target, div4, anchor);
+    			append_dev(div4, i4);
+    			append_dev(div4, t28);
+    			append_dev(div4, span7);
+    			append_dev(div4, t30);
+    			append_dev(div4, span8);
+    			append_dev(span8, t31);
+    			append_dev(span8, t32);
+    			append_dev(div4, t33);
+    			append_dev(div4, input4);
+    			insert_dev(target, t34, anchor);
+    			insert_dev(target, div5, anchor);
+    			append_dev(div5, i5);
+    			append_dev(div5, t35);
+    			append_dev(div5, span9);
+    			append_dev(div5, t37);
+    			append_dev(div5, span10);
+    			append_dev(span10, t38);
+    			append_dev(span10, t39);
+    			append_dev(div5, t40);
+    			append_dev(div5, input5);
+    			insert_dev(target, t41, anchor);
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].m(target, anchor);
     			}
 
-    			insert_dev(target, t21, anchor);
+    			insert_dev(target, t42, anchor);
     			insert_dev(target, button0, anchor);
-    			insert_dev(target, t23, anchor);
+    			insert_dev(target, t44, anchor);
     			insert_dev(target, button1, anchor);
     			if (remount) run_all(dispose);
 
@@ -576,8 +714,11 @@ var app = (function () {
     				listen_dev(select, "change", /*change_handler_1*/ ctx[12], false, false, false),
     				listen_dev(input1, "change", /*change_handler_2*/ ctx[13], false, false, false),
     				listen_dev(input2, "change", /*change_handler_3*/ ctx[14], false, false, false),
-    				listen_dev(button0, "click", /*click_handler*/ ctx[18], false, false, false),
-    				listen_dev(button1, "click", /*click_handler_1*/ ctx[19], false, false, false)
+    				listen_dev(input3, "change", /*change_handler_4*/ ctx[15], false, false, false),
+    				listen_dev(input4, "change", /*change_handler_5*/ ctx[16], false, false, false),
+    				listen_dev(input5, "change", /*change_handler_6*/ ctx[17], false, false, false),
+    				listen_dev(button0, "click", /*click_handler*/ ctx[22], false, false, false),
+    				listen_dev(button1, "click", /*click_handler_1*/ ctx[23], false, false, false)
     			];
     		},
     		p: function update(ctx, dirty) {
@@ -623,6 +764,24 @@ var app = (function () {
     				prop_dev(input2, "value", input2_value_value);
     			}
 
+    			if (dirty & /*data*/ 1 && t24_value !== (t24_value = /*data*/ ctx[0].delay.delay + "")) set_data_dev(t24, t24_value);
+
+    			if (dirty & /*data*/ 1 && input3_value_value !== (input3_value_value = Math.round(/*data*/ ctx[0].delay * 10).toString())) {
+    				prop_dev(input3, "value", input3_value_value);
+    			}
+
+    			if (dirty & /*data*/ 1 && t31_value !== (t31_value = /*data*/ ctx[0].delay.feedback + "")) set_data_dev(t31, t31_value);
+
+    			if (dirty & /*data*/ 1 && input4_value_value !== (input4_value_value = Math.round(/*data*/ ctx[0].delay.feedback).toString())) {
+    				prop_dev(input4, "value", input4_value_value);
+    			}
+
+    			if (dirty & /*data*/ 1 && t38_value !== (t38_value = /*data*/ ctx[0].delay.gain + "")) set_data_dev(t38, t38_value);
+
+    			if (dirty & /*data*/ 1 && input5_value_value !== (input5_value_value = Math.round(/*data*/ ctx[0].delay.gain).toString())) {
+    				prop_dev(input5, "value", input5_value_value);
+    			}
+
     			if (dirty & /*Math, data, SendValue, Number*/ 5) {
     				each_value = /*data*/ ctx[0].channels;
     				validate_each_argument(each_value);
@@ -636,7 +795,7 @@ var app = (function () {
     					} else {
     						each_blocks[i] = create_each_block(child_ctx);
     						each_blocks[i].c();
-    						each_blocks[i].m(t21.parentNode, t21);
+    						each_blocks[i].m(t42.parentNode, t42);
     					}
     				}
 
@@ -655,10 +814,16 @@ var app = (function () {
     			if (detaching) detach_dev(t13);
     			if (detaching) detach_dev(div2);
     			if (detaching) detach_dev(t20);
+    			if (detaching) detach_dev(div3);
+    			if (detaching) detach_dev(t27);
+    			if (detaching) detach_dev(div4);
+    			if (detaching) detach_dev(t34);
+    			if (detaching) detach_dev(div5);
+    			if (detaching) detach_dev(t41);
     			destroy_each(each_blocks, detaching);
-    			if (detaching) detach_dev(t21);
+    			if (detaching) detach_dev(t42);
     			if (detaching) detach_dev(button0);
-    			if (detaching) detach_dev(t23);
+    			if (detaching) detach_dev(t44);
     			if (detaching) detach_dev(button1);
     			run_all(dispose);
     		}
@@ -668,17 +833,17 @@ var app = (function () {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(94:2) {#if data != undefined}",
+    		source: "(96:2) {#if data != undefined}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (112:10) {:else}
+    // (114:10) {:else}
     function create_else_block(ctx) {
     	let option;
-    	let t_value = /*rev*/ ctx[23] + "";
+    	let t_value = /*rev*/ ctx[27] + "";
     	let t;
     	let option_value_value;
 
@@ -686,9 +851,9 @@ var app = (function () {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*i*/ ctx[22];
+    			option.__value = option_value_value = /*i*/ ctx[26];
     			option.value = option.__value;
-    			add_location(option, file, 112, 10, 2758);
+    			add_location(option, file, 114, 10, 2829);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -704,17 +869,17 @@ var app = (function () {
     		block,
     		id: create_else_block.name,
     		type: "else",
-    		source: "(112:10) {:else}",
+    		source: "(114:10) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (110:10) {#if i == data.reverb.type}
+    // (112:10) {#if i == data.reverb.type}
     function create_if_block_1(ctx) {
     	let option;
-    	let t_value = /*rev*/ ctx[23] + "";
+    	let t_value = /*rev*/ ctx[27] + "";
     	let t;
     	let option_value_value;
 
@@ -722,10 +887,10 @@ var app = (function () {
     		c: function create() {
     			option = element("option");
     			t = text(t_value);
-    			option.__value = option_value_value = /*i*/ ctx[22];
+    			option.__value = option_value_value = /*i*/ ctx[26];
     			option.value = option.__value;
     			option.selected = true;
-    			add_location(option, file, 110, 10, 2688);
+    			add_location(option, file, 112, 10, 2759);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -741,19 +906,19 @@ var app = (function () {
     		block,
     		id: create_if_block_1.name,
     		type: "if",
-    		source: "(110:10) {#if i == data.reverb.type}",
+    		source: "(112:10) {#if i == data.reverb.type}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (109:8) {#each revTypes as rev, i}
+    // (111:8) {#each revTypes as rev, i}
     function create_each_block_1(ctx) {
     	let if_block_anchor;
 
     	function select_block_type(ctx, dirty) {
-    		if (/*i*/ ctx[22] == /*data*/ ctx[0].reverb.type) return create_if_block_1;
+    		if (/*i*/ ctx[26] == /*data*/ ctx[0].reverb.type) return create_if_block_1;
     		return create_else_block;
     	}
 
@@ -792,27 +957,27 @@ var app = (function () {
     		block,
     		id: create_each_block_1.name,
     		type: "each",
-    		source: "(109:8) {#each revTypes as rev, i}",
+    		source: "(111:8) {#each revTypes as rev, i}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (138:4) {#each data.channels as chan, i}
+    // (173:4) {#each data.channels as chan, i}
     function create_each_block(ctx) {
     	let div0;
     	let i0;
     	let t0;
-    	let t1_value = /*i*/ ctx[22] + 1 + "";
+    	let t1_value = /*i*/ ctx[26] + 1 + "";
     	let t1;
     	let t2;
     	let span0;
-    	let t3_value = /*chan*/ ctx[20].name + "";
+    	let t3_value = /*chan*/ ctx[24].name + "";
     	let t3;
     	let t4;
     	let span1;
-    	let t5_value = /*chan*/ ctx[20].gain + "";
+    	let t5_value = /*chan*/ ctx[24].gain + "";
     	let t5;
     	let t6;
     	let t7;
@@ -825,7 +990,7 @@ var app = (function () {
     	let span2;
     	let t11;
     	let span3;
-    	let t12_value = /*chan*/ ctx[20].pan + "";
+    	let t12_value = /*chan*/ ctx[24].pan + "";
     	let t12;
     	let t13;
     	let t14;
@@ -838,24 +1003,41 @@ var app = (function () {
     	let span4;
     	let t18;
     	let span5;
-    	let t19_value = /*chan*/ ctx[20].send + "";
+    	let t19_value = /*chan*/ ctx[24].sendReverb + "";
     	let t19;
     	let t20;
     	let t21;
     	let input2;
     	let input2_value_value;
+    	let t22;
+    	let div3;
+    	let i3;
+    	let t23;
+    	let span6;
+    	let t25;
+    	let span7;
+    	let t26_value = /*chan*/ ctx[24].sendDelay + "";
+    	let t26;
+    	let t27;
+    	let t28;
+    	let input3;
+    	let input3_value_value;
     	let dispose;
 
-    	function change_handler_4(...args) {
-    		return /*change_handler_4*/ ctx[15](/*i*/ ctx[22], ...args);
+    	function change_handler_7(...args) {
+    		return /*change_handler_7*/ ctx[18](/*i*/ ctx[26], ...args);
     	}
 
-    	function change_handler_5(...args) {
-    		return /*change_handler_5*/ ctx[16](/*i*/ ctx[22], ...args);
+    	function change_handler_8(...args) {
+    		return /*change_handler_8*/ ctx[19](/*i*/ ctx[26], ...args);
     	}
 
-    	function change_handler_6(...args) {
-    		return /*change_handler_6*/ ctx[17](/*i*/ ctx[22], ...args);
+    	function change_handler_9(...args) {
+    		return /*change_handler_9*/ ctx[20](/*i*/ ctx[26], ...args);
+    	}
+
+    	function change_handler_10(...args) {
+    		return /*change_handler_10*/ ctx[21](/*i*/ ctx[26], ...args);
     	}
 
     	const block = {
@@ -897,36 +1079,58 @@ var app = (function () {
     			t20 = text(" dB");
     			t21 = space();
     			input2 = element("input");
-    			add_location(i0, file, 139, 8, 3566);
-    			add_location(span0, file, 140, 8, 3590);
-    			add_location(span1, file, 141, 8, 3623);
+    			t22 = space();
+    			div3 = element("div");
+    			i3 = element("i");
+    			t23 = space();
+    			span6 = element("span");
+    			span6.textContent = "Delay Send";
+    			t25 = space();
+    			span7 = element("span");
+    			t26 = text(t26_value);
+    			t27 = text(" dB");
+    			t28 = space();
+    			input3 = element("input");
+    			add_location(i0, file, 174, 8, 4716);
+    			add_location(span0, file, 175, 8, 4740);
+    			add_location(span1, file, 176, 8, 4773);
     			attr_dev(input0, "type", "range");
-    			input0.value = input0_value_value = Math.round(/*chan*/ ctx[20].gain).toString();
+    			input0.value = input0_value_value = Math.round(/*chan*/ ctx[24].gain).toString();
     			attr_dev(input0, "min", "-60");
     			attr_dev(input0, "max", "6");
-    			add_location(input0, file, 142, 8, 3659);
+    			add_location(input0, file, 177, 8, 4809);
     			attr_dev(div0, "class", "channel svelte-5v14zm");
-    			add_location(div0, file, 138, 6, 3536);
-    			add_location(i1, file, 150, 8, 3914);
-    			add_location(span2, file, 151, 8, 3930);
-    			add_location(span3, file, 152, 8, 3955);
+    			add_location(div0, file, 173, 6, 4686);
+    			add_location(i1, file, 185, 8, 5064);
+    			add_location(span2, file, 186, 8, 5080);
+    			add_location(span3, file, 187, 8, 5105);
     			attr_dev(input1, "type", "range");
-    			input1.value = input1_value_value = Math.round(/*chan*/ ctx[20].pan).toString();
+    			input1.value = input1_value_value = Math.round(/*chan*/ ctx[24].pan).toString();
     			attr_dev(input1, "min", "0");
     			attr_dev(input1, "max", "100");
-    			add_location(input1, file, 153, 8, 3989);
+    			add_location(input1, file, 188, 8, 5139);
     			attr_dev(div1, "class", "channel svelte-5v14zm");
-    			add_location(div1, file, 149, 6, 3884);
-    			add_location(i2, file, 161, 8, 4242);
-    			add_location(span4, file, 162, 8, 4258);
-    			add_location(span5, file, 163, 8, 4291);
+    			add_location(div1, file, 184, 6, 5034);
+    			add_location(i2, file, 196, 8, 5392);
+    			add_location(span4, file, 197, 8, 5408);
+    			add_location(span5, file, 198, 8, 5441);
     			attr_dev(input2, "type", "range");
-    			input2.value = input2_value_value = Math.round(/*chan*/ ctx[20].send).toString();
+    			input2.value = input2_value_value = Math.round(/*chan*/ ctx[24].sendReverb).toString();
     			attr_dev(input2, "min", "-60");
     			attr_dev(input2, "max", "20");
-    			add_location(input2, file, 164, 8, 4327);
+    			add_location(input2, file, 199, 8, 5483);
     			attr_dev(div2, "class", "channel svelte-5v14zm");
-    			add_location(div2, file, 160, 6, 4212);
+    			add_location(div2, file, 195, 6, 5362);
+    			add_location(i3, file, 207, 8, 5751);
+    			add_location(span6, file, 208, 8, 5767);
+    			add_location(span7, file, 209, 8, 5799);
+    			attr_dev(input3, "type", "range");
+    			input3.value = input3_value_value = Math.round(/*chan*/ ctx[24].sendDelay).toString();
+    			attr_dev(input3, "min", "-60");
+    			attr_dev(input3, "max", "20");
+    			add_location(input3, file, 210, 8, 5840);
+    			attr_dev(div3, "class", "channel svelte-5v14zm");
+    			add_location(div3, file, 206, 6, 5721);
     		},
     		m: function mount(target, anchor, remount) {
     			insert_dev(target, div0, anchor);
@@ -964,33 +1168,51 @@ var app = (function () {
     			append_dev(span5, t20);
     			append_dev(div2, t21);
     			append_dev(div2, input2);
+    			insert_dev(target, t22, anchor);
+    			insert_dev(target, div3, anchor);
+    			append_dev(div3, i3);
+    			append_dev(div3, t23);
+    			append_dev(div3, span6);
+    			append_dev(div3, t25);
+    			append_dev(div3, span7);
+    			append_dev(span7, t26);
+    			append_dev(span7, t27);
+    			append_dev(div3, t28);
+    			append_dev(div3, input3);
     			if (remount) run_all(dispose);
 
     			dispose = [
-    				listen_dev(input0, "change", change_handler_4, false, false, false),
-    				listen_dev(input1, "change", change_handler_5, false, false, false),
-    				listen_dev(input2, "change", change_handler_6, false, false, false)
+    				listen_dev(input0, "change", change_handler_7, false, false, false),
+    				listen_dev(input1, "change", change_handler_8, false, false, false),
+    				listen_dev(input2, "change", change_handler_9, false, false, false),
+    				listen_dev(input3, "change", change_handler_10, false, false, false)
     			];
     		},
     		p: function update(new_ctx, dirty) {
     			ctx = new_ctx;
-    			if (dirty & /*data*/ 1 && t3_value !== (t3_value = /*chan*/ ctx[20].name + "")) set_data_dev(t3, t3_value);
-    			if (dirty & /*data*/ 1 && t5_value !== (t5_value = /*chan*/ ctx[20].gain + "")) set_data_dev(t5, t5_value);
+    			if (dirty & /*data*/ 1 && t3_value !== (t3_value = /*chan*/ ctx[24].name + "")) set_data_dev(t3, t3_value);
+    			if (dirty & /*data*/ 1 && t5_value !== (t5_value = /*chan*/ ctx[24].gain + "")) set_data_dev(t5, t5_value);
 
-    			if (dirty & /*data*/ 1 && input0_value_value !== (input0_value_value = Math.round(/*chan*/ ctx[20].gain).toString())) {
+    			if (dirty & /*data*/ 1 && input0_value_value !== (input0_value_value = Math.round(/*chan*/ ctx[24].gain).toString())) {
     				prop_dev(input0, "value", input0_value_value);
     			}
 
-    			if (dirty & /*data*/ 1 && t12_value !== (t12_value = /*chan*/ ctx[20].pan + "")) set_data_dev(t12, t12_value);
+    			if (dirty & /*data*/ 1 && t12_value !== (t12_value = /*chan*/ ctx[24].pan + "")) set_data_dev(t12, t12_value);
 
-    			if (dirty & /*data*/ 1 && input1_value_value !== (input1_value_value = Math.round(/*chan*/ ctx[20].pan).toString())) {
+    			if (dirty & /*data*/ 1 && input1_value_value !== (input1_value_value = Math.round(/*chan*/ ctx[24].pan).toString())) {
     				prop_dev(input1, "value", input1_value_value);
     			}
 
-    			if (dirty & /*data*/ 1 && t19_value !== (t19_value = /*chan*/ ctx[20].send + "")) set_data_dev(t19, t19_value);
+    			if (dirty & /*data*/ 1 && t19_value !== (t19_value = /*chan*/ ctx[24].sendReverb + "")) set_data_dev(t19, t19_value);
 
-    			if (dirty & /*data*/ 1 && input2_value_value !== (input2_value_value = Math.round(/*chan*/ ctx[20].send).toString())) {
+    			if (dirty & /*data*/ 1 && input2_value_value !== (input2_value_value = Math.round(/*chan*/ ctx[24].sendReverb).toString())) {
     				prop_dev(input2, "value", input2_value_value);
+    			}
+
+    			if (dirty & /*data*/ 1 && t26_value !== (t26_value = /*chan*/ ctx[24].sendDelay + "")) set_data_dev(t26, t26_value);
+
+    			if (dirty & /*data*/ 1 && input3_value_value !== (input3_value_value = Math.round(/*chan*/ ctx[24].sendDelay).toString())) {
+    				prop_dev(input3, "value", input3_value_value);
     			}
     		},
     		d: function destroy(detaching) {
@@ -999,6 +1221,8 @@ var app = (function () {
     			if (detaching) detach_dev(div1);
     			if (detaching) detach_dev(t15);
     			if (detaching) detach_dev(div2);
+    			if (detaching) detach_dev(t22);
+    			if (detaching) detach_dev(div3);
     			run_all(dispose);
     		}
     	};
@@ -1007,7 +1231,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(138:4) {#each data.channels as chan, i}",
+    		source: "(173:4) {#each data.channels as chan, i}",
     		ctx
     	});
 
@@ -1022,7 +1246,7 @@ var app = (function () {
     		c: function create() {
     			main = element("main");
     			if (if_block) if_block.c();
-    			add_location(main, file, 92, 0, 2087);
+    			add_location(main, file, 94, 0, 2158);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1082,6 +1306,8 @@ var app = (function () {
     			_data[_type] = _val;
     		} else if (_section == "reverb") {
     			_data.reverb[_type] = _val;
+    		} else if (_section == "delay") {
+    			_data.delay[_type] = _val;
     		}
 
     		let _msg = {
@@ -1164,9 +1390,13 @@ var app = (function () {
     	const change_handler_1 = e => SendValue(undefined, "reverb", "type", Number(e.target.value));
     	const change_handler_2 = e => SendValue(undefined, "reverb", "rt60", Number(e.target.value) / 10);
     	const change_handler_3 = e => SendValue(undefined, "reverb", "gain", Number(e.target.value));
-    	const change_handler_4 = (i, e) => SendValue(i, "channels", "gain", Number(e.target.value));
-    	const change_handler_5 = (i, e) => SendValue(i, "channels", "pan", Number(e.target.value));
-    	const change_handler_6 = (i, e) => SendValue(i, "channels", "send", Number(e.target.value));
+    	const change_handler_4 = e => SendValue(undefined, "delay", "delay", Number(e.target.value) / 10);
+    	const change_handler_5 = e => SendValue(undefined, "delay", "feedback", Number(e.target.value));
+    	const change_handler_6 = e => SendValue(undefined, "delay", "gain", Number(e.target.value));
+    	const change_handler_7 = (i, e) => SendValue(i, "channels", "gain", Number(e.target.value));
+    	const change_handler_8 = (i, e) => SendValue(i, "channels", "pan", Number(e.target.value));
+    	const change_handler_9 = (i, e) => SendValue(i, "channels", "sendReverb", Number(e.target.value));
+    	const change_handler_10 = (i, e) => SendValue(i, "channels", "sendDelay", Number(e.target.value));
     	const click_handler = () => AddChannel(false);
     	const click_handler_1 = () => AddChannel(true);
 
@@ -1223,6 +1453,10 @@ var app = (function () {
     		change_handler_4,
     		change_handler_5,
     		change_handler_6,
+    		change_handler_7,
+    		change_handler_8,
+    		change_handler_9,
+    		change_handler_10,
     		click_handler,
     		click_handler_1
     	];
