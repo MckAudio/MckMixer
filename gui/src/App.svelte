@@ -1,5 +1,8 @@
 <script>
   import { onMount, onDestroy } from "svelte";
+  import { DbToLog, LogToDb } from "./Tools.svelte";
+  import Slider from "./Slider.svelte";
+  import SliderLabel from "./SliderLabel.svelte";
 
   export let name;
 
@@ -58,7 +61,9 @@
     socket.onmessage = _evt => RecvMsg(_evt.data);
   }
   onMount(() => {
-    Connect("ws://127.0.0.1", port);
+    let _uri = document.URL;
+    let _url = _uri.substring(_uri.indexOf('://')+3, _uri.lastIndexOf(':'));
+    Connect("ws://" + _url, port);
   });
   onDestroy(() => {
     if (socketConnected) {
@@ -83,6 +88,20 @@
 </script>
 
 <style>
+  .base {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto;
+  }
+  .main {
+    grid-column: 1/2;
+    overflow: auto;
+  }
+  .master {
+    grid-column: -2/-1;
+    padding: 8px;
+  }
   .channel {
     padding: 16px;
     display: grid;
@@ -92,12 +111,27 @@
   }
 </style>
 
-<main>
+<div class="base">
+  <div class="main">
   {#if data != undefined}
       <div class="channel">
         <i></i>
         <span>Master</span>
-        <span>{data.gain} dB</span>
+        <span>{Math.round(data.gain)} dB</span>
+        <SliderLabel label={Math.round(data.gain) + " dB"} value={DbToLog(data.gain)} Handler={_v => SendValue(undefined, 'master', 'gain', LogToDb(_v))}/>
+        <!--
+        <input
+          type="range"
+          value={Math.round(data.gain).toString()}
+          min="-60"
+          max="6"
+          on:change={e => SendValue(undefined, 'master', 'gain', Number(e.target.value))} />
+          -->
+      </div>
+      <div class="channel">
+        <i></i>
+        <span>Master</span>
+        <span>{Math.round(data.gain)} dB</span>
         <input
           type="range"
           value={Math.round(data.gain).toString()}
@@ -223,4 +257,10 @@
       Add new stereo channel
     </button>
   {/if}
-</main>
+  </div>
+  <div class="master">
+  {#if data != undefined}
+    <Slider vertical={true} value={DbToLog(data.gain)} Handler={_v => SendValue(undefined, 'master', 'gain', LogToDb(_v))}/>
+    {/if}
+  </div>
+</div>
