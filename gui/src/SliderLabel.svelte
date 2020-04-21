@@ -6,6 +6,7 @@
   export let Handler = undefined;
   export let value = 0.0;
   export let label = "";
+  export let centered = false;
 
   let curValue = -1.0;
   let curWidth = 100.0;
@@ -29,7 +30,7 @@
   }
 
   function TouchHandler(_evt) {
-        console.log("[TOUCH]", _evt);
+    console.log("[TOUCH]", _evt);
     if (_evt.type == "touchstart") {
       if (base) {
         isDragging = true;
@@ -39,10 +40,17 @@
         if (vertical) {
           offset = GetOffsetTop(base);
           _val =
-            1.0 - Math.max(0.0, Math.min(1.0, (_evt.touches[0].clientY - offset) / elemHeight));
+            1.0 -
+            Math.max(
+              0.0,
+              Math.min(1.0, (_evt.touches[0].clientY - offset) / elemHeight)
+            );
         } else {
           offset = GetOffsetLeft(base);
-          _val = Math.max(0.0, Math.min(1.0, (_evt.touches[0].clientX - offset) / elemWidth));
+          _val = Math.max(
+            0.0,
+            Math.min(1.0, (_evt.touches[0].clientX - offset) / elemWidth)
+          );
         }
         if (Handler) {
           Handler(_val);
@@ -55,10 +63,17 @@
         if (vertical) {
           offset = GetOffsetTop(base);
           _val =
-            1.0 - Math.max(0.0, Math.min(1.0, (_evt.touches[0].clientY - offset) / elemHeight));
+            1.0 -
+            Math.max(
+              0.0,
+              Math.min(1.0, (_evt.touches[0].clientY - offset) / elemHeight)
+            );
         } else {
           offset = GetOffsetLeft(base);
-          _val = Math.max(0.0, Math.min(1.0, (_evt.touches[0].clientX - offset) / elemWidth));
+          _val = Math.max(
+            0.0,
+            Math.min(1.0, (_evt.touches[0].clientX - offset) / elemWidth)
+          );
         }
         if (Handler) {
           Handler(_val);
@@ -77,6 +92,14 @@
   function MouseHandler(_evt) {
     if (_evt.type == "mousedown") {
       if (base) {
+        if (_evt.ctrlKey) {
+          if (centered) {
+            Handler(0.5);
+          } else {
+            Handler(1.0);
+          }
+          return;
+        }
         isDragging = true;
         //elemWidth = base.offsetWidth;
         //elemHeight = base.offsetHeight;
@@ -120,7 +143,7 @@
   }
 
   onMount(() => {
-      window.addEventListener("contextmenu", e => e.preventDefault());
+    window.addEventListener("contextmenu", e => e.preventDefault());
     document.addEventListener("mousemove", MouseHandler);
     document.addEventListener("mouseup", MouseHandler);
     document.addEventListener("touchmove", TouchHandler);
@@ -145,29 +168,31 @@
   }
 
   .blend {
-      position: absolute;
-      height: 20px;
+    position: absolute;
+    height: 20px;
   }
 
   .bg {
-      background: white;
-      z-index: 1;
+    background: #f0f0f0;
+    z-index: 1;
   }
   span {
-      color: white;
-      position: absolute;
-      z-index: 3;
-      mix-blend-mode: difference;
-      text-align: center;
-      font-size: 14px;
-      font-family: roboto;
+    color: #f0f0f0;
+    position: absolute;
+    z-index: 3;
+    mix-blend-mode: difference;
+    text-align: center;
+    font-size: 14px;
+    font-family: mck-lato;
   }
   .fg {
     background-image: linear-gradient(90deg, #666, #222);
-      z-index: 4;
-      mix-blend-mode: screen;
+    z-index: 4;
+    mix-blend-mode: screen;
   }
-
+  .fg.centered {
+    background-image: linear-gradient(90deg, #666, #222, #666);
+  }
 
   .slider.vert {
     min-width: 20px;
@@ -178,22 +203,45 @@
     background-image: linear-gradient(0deg, #666, #222);
   }
   .slider.hori {
-      z-index: 2;
-      position: absolute;
-      background: black;
+    z-index: 2;
+    position: absolute;
+    background: black;
   }
 </style>
 
-<div class="base" bind:clientWidth={elemWidth} bind:clientHeight={elemHeight} bind:this={base} on:mousedown={MouseHandler} on:touchstart={TouchHandler}>
+<div
+  class="base"
+  bind:clientWidth={elemWidth}
+  bind:clientHeight={elemHeight}
+  bind:this={base}
+  on:mousedown={MouseHandler}
+  on:touchstart={TouchHandler}>
   {#if vertical}
     <div
       class="slider vert"
       style="top: {100 - curHeight}%; height: {curHeight}%" />
   {:else}
-    <div class="blend bg" style="width: {elemWidth}px; height: {elemHeight}px;"></div>
-    <div class="blend slider hori" style="width: {curValue * elemWidth}px; height: {elemHeight}px;" />
-    <div class="blend fg" style="width: {elemWidth}px; height: {elemHeight}px;"></div>
-    <span style="width: {elemWidth}px; height: {elemHeight}px; line-height: {elemHeight}px;">{label}</span>
-    <div class="blend border" style="width: {elemWidth}px;  height: {elemHeight}px;"/>
+    <div
+      class="blend bg"
+      style="width: {elemWidth}px; height: {elemHeight}px;" />
+    {#if centered}
+      <div
+        class="blend slider hori"
+        style="left: {curValue >= 0.5 ? '50%' : `${curValue * elemWidth}px`}; width: {Math.abs((curValue - 0.5) * elemWidth)}px; height: {elemHeight}px;" />
+    {:else}
+      <div
+        class="blend slider hori"
+        style="width: {curValue * elemWidth}px; height: {elemHeight}px;" />
+    {/if}
+    <div
+      class="blend fg {centered ? 'centered' : ''}"
+      style="width: {elemWidth}px; height: {elemHeight}px;" />
+    <span
+      style="width: {elemWidth}px; height: {elemHeight}px; line-height: {elemHeight}px;">
+      {label}
+    </span>
+    <div
+      class="blend border"
+      style="width: {elemWidth}px; height: {elemHeight}px;" />
   {/if}
 </div>

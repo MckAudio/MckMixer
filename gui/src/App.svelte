@@ -1,8 +1,12 @@
 <script>
   import { onMount, onDestroy } from "svelte";
   import { DbToLog, LogToDb } from "./Tools.svelte";
+  import Settings from "./Settings.svelte";
   import Slider from "./Slider.svelte";
   import SliderLabel from "./SliderLabel.svelte";
+  import Channel from "./Channel.svelte";
+  import ReverbSend from "./ReverbSend.svelte";
+  import DelaySend from "./DelaySend.svelte";
 
   export let name;
 
@@ -17,7 +21,7 @@
   function SendValue(_idx, _section, _type, _val) {
     let _data = JSON.parse(JSON.stringify(data));
     if (_section == "channels") {
-    _data.channels[_idx][_type] = _val;
+      _data.channels[_idx][_type] = _val;
     } else if (_section == "master") {
       _data[_type] = _val;
     } else if (_section == "reverb") {
@@ -46,6 +50,17 @@
     }
   }
 
+  function SendMsg(_msgType, _section, _data) {
+    let _msg = {
+      msgType: _msgType,
+      section: _section,
+      data: _data
+    };
+    if (socketConnected) {
+      socket.send(JSON.stringify(_msg));
+    }
+  }
+
   function Connect(_url, _port) {
     let _uri = `${_url}:${_port}`;
     console.log(_uri);
@@ -62,7 +77,7 @@
   }
   onMount(() => {
     let _uri = document.URL;
-    let _url = _uri.substring(_uri.indexOf('://')+3, _uri.lastIndexOf(':'));
+    let _url = _uri.substring(_uri.indexOf("://") + 3, _uri.lastIndexOf(":"));
     Connect("ws://" + _url, port);
   });
   onDestroy(() => {
@@ -92,175 +107,78 @@
     width: 100%;
     height: 100%;
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: auto 1fr auto auto;
+    grid-row-gap: 1px;
+    grid-column-gap: 1px;
+    background-color: #333;
   }
-  .main {
+  .settings {
     grid-column: 1/2;
-    overflow: auto;
+    overflow-y: auto;
+    padding: 8px;
+    background-color: #f0f0f0;
+  }
+  .channels {
+    grid-column: 2/3;
+    padding: 8px;
+    height: calc(100% - 16px);
+    width: calc(100% - 16px);
+    background-color: #f0f0f0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    /*
+    grid-auto-columns: min-content;
+    grid-auto-flow: column;*/
+    grid-gap: 8px;
+  }
+  .sends {
+    grid-column: -3/-2;
+    padding: 8px;
+    height: calc(100% - 16px);
+    width: calc(100% - 16px);
+    background-color: #f0f0f0;
+    display: grid;
+    grid-template-columns: 140px;
+    grid-template-rows: 1fr 1fr;
+    grid-gap: 8px;
   }
   .master {
     grid-column: -2/-1;
     padding: 8px;
-  }
-  .channel {
-    padding: 16px;
-    display: grid;
-    grid-template-columns: 40px 1fr 50px 2fr;
-    column-gap: 4px;
-    row-gap: 4px;
+    background-color: #f0f0f0;
   }
 </style>
 
 <div class="base">
-  <div class="main">
   {#if data != undefined}
-      <div class="channel">
-        <i></i>
-        <span>Master</span>
-        <span>{Math.round(data.gain)} dB</span>
-        <SliderLabel label={Math.round(data.gain) + " dB"} value={DbToLog(data.gain)} Handler={_v => SendValue(undefined, 'master', 'gain', LogToDb(_v))}/>
-        <!--
-        <input
-          type="range"
-          value={Math.round(data.gain).toString()}
-          min="-60"
-          max="6"
-          on:change={e => SendValue(undefined, 'master', 'gain', Number(e.target.value))} />
-          -->
-      </div>
-      <div class="channel">
-        <i></i>
-        <span>Master</span>
-        <span>{Math.round(data.gain)} dB</span>
-        <input
-          type="range"
-          value={Math.round(data.gain).toString()}
-          min="-60"
-          max="6"
-          on:change={e => SendValue(undefined, 'master', 'gain', Number(e.target.value))} />
-      </div>
-      <div class="channel">
-        <i>REV</i>
-        <select on:change={e => SendValue(undefined, 'reverb', 'type', Number(e.target.value))}>
-        {#each revTypes as rev, i}
-          {#if i == data.reverb.type}
-          <option value={i} selected>{rev}</option>
-          {:else}
-          <option value={i}>{rev}</option>
-          {/if}
-          {/each}
-        </select>
-        <span>{data.reverb.rt60} s</span>
-        <input
-          type="range"
-          value={Math.round(data.reverb * 10.0).toString()}
-          min="5.0"
-          max="100.0"
-          on:change={e => SendValue(undefined, 'reverb', 'rt60', Number(e.target.value) / 10.0)} />
-      </div>
-      <div class="channel">
-        <i></i>
-        <span>Gain</span>
-        <span>{data.reverb.gain} dB</span>
-        <input
-          type="range"
-          value={Math.round(data.reverb.gain).toString()}
-          min="-60"
-          max="6"
-          on:change={e => SendValue(undefined, 'reverb', 'gain', Number(e.target.value))} />
-      </div>
-      <div class="channel">
-        <i>dly</i>
-        <span></span>
-        <span>{data.delay.delay} s</span>
-        <input
-          type="range"
-          value={Math.round(data.delay * 10.0).toString()}
-          min="1.0"
-          max="50.0"
-          on:change={e => SendValue(undefined, 'delay', 'delay', Number(e.target.value) / 10.0)} />
-      </div>
-      <div class="channel">
-        <i></i>
-        <span>Feedback</span>
-        <span>{data.delay.feedback} dB</span>
-        <input
-          type="range"
-          value={Math.round(data.delay.feedback).toString()}
-          min="-60"
-          max="-3"
-          on:change={e => SendValue(undefined, 'delay', 'feedback', Number(e.target.value))} />
-      </div>
-      <div class="channel">
-        <i></i>
-        <span>Gain</span>
-        <span>{data.delay.gain} dB</span>
-        <input
-          type="range"
-          value={Math.round(data.delay.gain).toString()}
-          min="-60"
-          max="6"
-          on:change={e => SendValue(undefined, 'delay', 'gain', Number(e.target.value))} />
-      </div>
-
-
-    {#each data.channels as chan, i}
-      <div class="channel">
-        <i>#{i + 1}</i>
-        <span>{chan.name}</span>
-        <span>{chan.gain} dB</span>
-        <input
-          type="range"
-          value={Math.round(chan.gain).toString()}
-          min="-60"
-          max="6"
-          on:change={e => SendValue(i, 'channels', 'gain', Number(e.target.value))} />
-      </div>
-      <div class="channel">
-        <i></i>
-        <span>Pan</span>
-        <span>{chan.pan} %</span>
-        <input
-          type="range"
-          value={Math.round(chan.pan).toString()}
-          min="0"
-          max="100"
-          on:change={e => SendValue(i, 'channels', 'pan', Number(e.target.value))} />
-      </div>
-      <div class="channel">
-        <i></i>
-        <span>Reverb Send</span>
-        <span>{chan.sendReverb} dB</span>
-        <input
-          type="range"
-          value={Math.round(chan.sendReverb).toString()}
-          min="-60"
-          max="20"
-          on:change={e => SendValue(i, 'channels', 'sendReverb', Number(e.target.value))} />
-      </div>
-      <div class="channel">
-        <i></i>
-        <span>Delay Send</span>
-        <span>{chan.sendDelay} dB</span>
-        <input
-          type="range"
-          value={Math.round(chan.sendDelay).toString()}
-          min="-60"
-          max="20"
-          on:change={e => SendValue(i, 'channels', 'sendDelay', Number(e.target.value))} />
-      </div>
-    {/each}
-    <button type="button" on:click={() => AddChannel(false)}>
-      Add new mono channel
-    </button>
-    <button type="button" on:click={() => AddChannel(true)}>
-      Add new stereo channel
-    </button>
+    <div class="settings">
+      <Settings {data} {SendValue} {SendMsg} />
+    </div>
+    <div class="channels">
+      {#each data.channels as chan, i}
+        <Channel
+          index={i}
+          data={chan}
+          SendValue={(t, v) => SendValue(i, 'channels', t, v)} />
+      {/each}
+    </div>
+    <div class="sends">
+      <ReverbSend
+        index={0}
+        data={data.reverb}
+        SendValue={(t, v) => SendValue(null, 'reverb', t, v)} />
+      <DelaySend
+        index={1}
+        data={data.delay}
+        SendValue={(t, v) => SendValue(null, 'delay', t, v)} />
+    </div>
+    <div class="master">
+      {#if data != undefined}
+        <Slider
+          vertical={true}
+          value={DbToLog(data.gain)}
+          Handler={_v => SendValue(undefined, 'master', 'gain', LogToDb(_v))} />
+      {/if}
+    </div>
   {/if}
-  </div>
-  <div class="master">
-  {#if data != undefined}
-    <Slider vertical={true} value={DbToLog(data.gain)} Handler={_v => SendValue(undefined, 'master', 'gain', LogToDb(_v))}/>
-    {/if}
-  </div>
 </div>

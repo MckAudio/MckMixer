@@ -24,6 +24,19 @@
 
   export function DbToLin(_db) {}
 
+  export function FormatPan(_pan) {
+    _pan = Math.round(_pan * 2.0 - 100.0);
+    let _str = "";
+    if (_pan == 0.0) {
+      _str = "C";
+    } else if (_pan < 0) {
+      _str = `L ${Math.abs(_pan)} %`;
+    } else {
+      _str = `R ${Math.abs(_pan)} %`;
+    }
+    return _str;
+  }
+
   // https://stackoverflow.com/a/5598797
   export function GetOffsetLeft(elem) {
     var offsetLeft = 0;

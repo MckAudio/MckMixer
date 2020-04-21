@@ -1,3 +1,25 @@
+@font-face {
+	font-family: mck-lato;
+	src: url(./Lato/Lato-Regular.ttf);
+}
+@font-face {
+	font-family: mck-lato;
+	src: url(./Lato/Lato-Italic.ttf);
+	font-style: italic;
+}
+@font-face {
+	font-family: mck-lato;
+	src: url(./Lato/Lato-Bold.ttf);
+	font-weight: bold;
+}
+@font-face {
+	font-family: mck-lato;
+	src: url(./Lato/Lato-BoldItalic.ttf);
+	font-weight: bold;
+	font-style: italic;
+}
+
+
 html, body {
 	position: relative;
 	width: 100%;
@@ -7,9 +29,10 @@ html, body {
 body {
 	color: #333;
 	margin: 0;
-	padding: 8px;
+	padding: 0;
 	box-sizing: border-box;
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+	font-family: mck-lato;
+	/*font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;*/
 }
 
 a {
