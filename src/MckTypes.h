@@ -25,6 +25,17 @@ namespace mck {
     void to_json(nlohmann::json &j, const ChannelCommand &c);
     void from_json(const nlohmann::json &j, ChannelCommand &c);
 
+    struct ConnectionCommand {
+        bool isInput;
+        unsigned idx;
+        unsigned subIdx;
+        std::string command;
+        std::string target;
+        ConnectionCommand() : isInput(true), command(""), idx(0), subIdx(0), target("") {}
+    };
+    void to_json(nlohmann::json &j, const ConnectionCommand &c);
+    void from_json(const nlohmann::json &j, ConnectionCommand &c);
+
     struct Channel {
         std::string name;
         bool isStereo;

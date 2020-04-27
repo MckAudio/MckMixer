@@ -74,3 +74,4 @@ wxrev:
 	rm bin/* || true
 	rm uWebSockets/uSockets/*.o || true
 	rm uWebSockets/uSockets/*.a || true
+	rm www/build/* || true

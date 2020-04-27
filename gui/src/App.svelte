@@ -15,6 +15,8 @@
   let socketConnected = false;
   let gain = 0.0;
   let data = undefined;
+  let sources = [];
+  let targets = [];
 
   let revTypes = ["STREV", "PROG2", "ZREV2", "NREVB"];
 
@@ -43,10 +45,18 @@
   }
   function RecvMsg(_msg) {
     let _tmp = JSON.parse(_msg);
-    if (_tmp.msgType == "partial" && _tmp.section == "config") {
-      let _data = JSON.parse(_tmp.data);
-      data = _data;
-      console.log("[NEW DATA]", data);
+    console.log("[MSG]", _tmp);
+    if (_tmp.msgType == "partial") {
+      if (_tmp.section == "config") {
+        let _data = JSON.parse(_tmp.data);
+        data = _data;
+      } else if (_tmp.section == "source") {
+        let _sources = JSON.parse(_tmp.data);
+        sources = _sources;
+      } else if (_tmp.section == "target") {
+        let _targets = JSON.parse(_tmp.data);
+        targets = _targets;
+      }
     }
   }
 
@@ -159,6 +169,8 @@
         <Channel
           index={i}
           data={chan}
+          {SendMsg}
+          {sources}
           SendValue={(t, v) => SendValue(i, 'channels', t, v)} />
       {/each}
     </div>

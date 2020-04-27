@@ -157,7 +157,8 @@ int main(int argc, char **argv)
                 outMsg.data = jC.dump();
                 json jOut = outMsg;
                 ws->send(jOut.dump(), uWS::OpCode::TEXT);
-            } else if (msg.msgType == "command" && msg.section == "channel") {
+            } else if (msg.msgType == "command") {
+            if (msg.section == "channel") {
                 json j = json::parse(msg.data);
                 mck::ChannelCommand cc;
                 mck::Config config;
@@ -179,6 +180,43 @@ int main(int argc, char **argv)
 
                 } catch (std::exception &e) {
                     std::fprintf(stderr, "Failed to read channel command: %s\n", e.what());
+                }
+            } else if (msg.section == "connection") {
+                json j = json::parse(msg.data);
+                mck::ConnectionCommand cc;
+                mck::Config config;
+                try {
+                    cc = j;
+                    m_mixer.ApplyConnectionCommand(cc, config);
+
+                    mck::Message outMsg("config", "partial");
+                    json jC = config;
+                    outMsg.data = jC.dump();
+                    json jOut = outMsg;
+                    ws->send(jOut.dump(), uWS::OpCode::TEXT);
+
+                } catch (std::exception &e) {
+                    std::fprintf(stderr, "Failed to read connection command: %s\n", e.what());
+                }
+            } } else if (msg.msgType == "request") {
+                if (msg.section == "source") {
+                    std::vector<std::string> cons;
+                    mck::GetInputPorts(m_mixer.GetClient(), cons);
+
+                    mck::Message outMsg("source", "partial");
+                    json j = cons;
+                    outMsg.data = j.dump();
+                    json jOut = outMsg;
+                    ws->send(jOut.dump(), uWS::OpCode::TEXT);
+                } else if (msg.section == "target") {
+                    std::vector<std::string> cons;
+                    mck::GetOutputPorts(m_mixer.GetClient(), cons);
+
+                    mck::Message outMsg("target", "partial");
+                    json j = cons;
+                    outMsg.data = j.dump();
+                    json jOut = outMsg;
+                    ws->send(jOut.dump(), uWS::OpCode::TEXT);
                 }
             } },
                                   .drain = [](auto *ws) {

@@ -25,6 +25,8 @@
         grid-auto-rows: auto;
         grid-template-columns: 50px 1fr;
         width: 160px;
+        font-size: 14px;
+        font-family: mck-lato
     }
 </style>
 

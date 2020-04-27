@@ -7,11 +7,15 @@ static int process(jack_nframes_t nframes, void *arg)
 }
 
 mck::Mixer::Mixer()
-    : m_isInitialized(false), m_bufferSize(0), m_sampleRate(0), m_activeConfig(0), m_newConfig(1), m_nInputChans(), m_updateCount(false)
+    : m_isInitialized(false), m_bufferSize(0), m_sampleRate(0), m_activeConfig(0), m_newConfig(1), m_nInputChans()
 {
     m_nInputChans[0] = 0;
     m_nInputChans[1] = 0;
     m_updateValues = false;
+    m_updateCount = false;
+    m_updateReady = false;
+    m_isProcessing = true;
+    m_phase = PROC_FADE_IN;
 }
 
 bool mck::Mixer::Init(std::string path)
@@ -23,10 +27,12 @@ bool mck::Mixer::Init(std::string path)
     }
 
     // Malloc Audio Inputs
+    /*
     m_audioIn = (jack_port_t **)malloc(MCK_MIXER_MAX_INPUTS * sizeof(jack_port_t *));
     memset(m_audioIn, 0, MCK_MIXER_MAX_INPUTS * sizeof(jack_port_t *));
     m_bufferIn = (jack_default_audio_sample_t **)malloc(MCK_MIXER_MAX_INPUTS * sizeof(jack_nframes_t *));
     memset(m_bufferIn, 0, MCK_MIXER_MAX_INPUTS * sizeof(jack_nframes_t *));
+    */
 
     // Open JACK server
     m_client = jack_client_open("MckMixer", JackNoStartServer, NULL);
@@ -45,6 +51,19 @@ bool mck::Mixer::Init(std::string path)
 
     m_bufferSize = jack_get_buffer_size(m_client);
     m_sampleRate = jack_get_sample_rate(m_client);
+
+    // Init Input DSP structures
+    unsigned memSize = m_bufferSize * sizeof(jack_default_audio_sample_t);
+    m_inputDsp = (InputDsp *)malloc(MCK_MIXER_MAX_INPUTS * sizeof(InputDsp));
+    memset(m_inputDsp, 0, MCK_MIXER_MAX_INPUTS * sizeof(MCK_MIXER_MAX_INPUTS));
+    /*
+    for (unsigned i = 0; i < MCK_MIXER_MAX_INPUTS; i++)
+    {
+        m_inputDsp[i].buffer[0] = (jack_default_audio_sample_t *)malloc(memSize);
+        m_inputDsp[i].buffer[1] = (jack_default_audio_sample_t *)malloc(memSize);
+        memset(m_inputDsp[i].buffer[0], 0, memSize);
+        memset(m_inputDsp[i].buffer[1], 0, memSize);
+    }*/
 
     // Init DSP stuff
     m_interpolLin = (double *)malloc(m_bufferSize * sizeof(double));
@@ -113,6 +132,17 @@ void mck::Mixer::Close()
 
     if (m_client != nullptr)
     {
+        m_phase = PROC_CLOSING;
+        std::unique_lock<std::mutex> lck(m_updateMutex);
+        while (true)
+        {
+            if (m_phase.load() == PROC_CLOSED)
+            {
+                break;
+            }
+            m_updateCond.wait(lck);
+        }
+
         // Save Connections here
         std::vector<std::string> cons;
         mck::GetConnections(m_client, m_audioOut[0], cons);
@@ -121,12 +151,45 @@ void mck::Mixer::Close()
         mck::GetConnections(m_client, m_audioOut[1], cons);
         m_config[m_activeConfig].targetRight = cons;
 
-        jack_client_close(m_client);
+        // Save Input Connections
+        for (unsigned i = 0; i < m_config[m_activeConfig].channelCount; i++)
+        {
+            mck::GetConnections(m_client, m_inputDsp[i].port[0], cons);
+            if (cons.size() > 0)
+            {
+                m_config[m_activeConfig].channels[i].sourceLeft = cons[0];
+            }
+            else
+            {
+                m_config[m_activeConfig].channels[i].sourceLeft = "";
+            }
+            if (m_config[m_activeConfig].channels[i].isStereo)
+            {
+                mck::GetConnections(m_client, m_inputDsp[i].port[1], cons);
+                if (cons.size() > 0)
+                {
+                    m_config[m_activeConfig].channels[i].sourceRight = cons[0];
+                }
+                else
+                {
+                    m_config[m_activeConfig].channels[i].sourceRight = "";
+                }
+            }
+        }
+        try
+        {
+            jack_client_close(m_client);
+        }
+        catch (std::exception &e)
+        {
+            std::fprintf(stderr, "Failed to close JACK client: %s\n", e.what());
+        }
     }
 
     SaveConfig(m_config[m_activeConfig], m_path.string());
 
-    free(m_audioIn);
+    free(m_inputDsp);
+
     free(m_interpolLin);
     free(m_interpolSqrt);
 
@@ -146,7 +209,7 @@ void mck::Mixer::Close()
 
 bool mck::Mixer::SetConfig(mck::Config &config)
 {
-    if (m_updateValues.load())
+    if (m_phase.load() == PROC_UPDATING)
     {
         std::fprintf(stderr, "MckMixer is updating...\n");
         return false;
@@ -193,21 +256,111 @@ bool mck::Mixer::SetConfig(mck::Config &config)
     m_config[m_newConfig] = config;
     m_nInputChans[m_newConfig] = nChans;
 
-    if (m_nInputChans[m_newConfig] > m_nInputChans[m_activeConfig])
+    std::string name = "";
+
+    if (nChans != m_nInputChans[m_activeConfig] || config.channelCount != m_config[m_activeConfig].channelCount)
     {
-        std::string name = "";
-        for (unsigned i = m_nInputChans[m_activeConfig]; i < m_nInputChans[m_newConfig]; i++)
+        mck::Config &curConfig = m_config[m_activeConfig];
+
+        // Signal audio process to fade out and wait for new values
+        m_phase = PROC_FADE_OUT;
+        char phase = PROC_FADE_OUT;
+        std::unique_lock<std::mutex> lck(m_updateMutex);
+        while (true)
         {
-            name = "audio_in_" + std::to_string(i + 1);
-            m_audioIn[i] = jack_port_register(m_client, name.c_str(), JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0);
+            phase = m_phase.load();
+            if (phase == PROC_CLOSED)
+            {
+                return false;
+            }
+            if (phase == PROC_BYPASS)
+            {
+                break;
+            }
+            m_updateCond.wait(lck);
         }
+        int ret = 0;
+        //ret = jack_deactivate(m_client);
+
+        // Change exisiting channels
+        for (unsigned i = 0; i < std::min(config.channelCount, curConfig.channelCount); i++)
+        {
+            if (config.channels[i].isStereo != curConfig.channels[i].isStereo)
+            {
+                if (config.channels[i].isStereo)
+                {
+                    name = "audio_in_" + std::to_string(i + 1) + "_l";
+                    jack_port_rename(m_client, m_inputDsp[i].port[0], name.c_str());
+                    name = "audio_in_" + std::to_string(i + 1) + "_r";
+                    m_inputDsp[i].port[1] = jack_port_register(m_client, name.c_str(), JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0);
+                    m_inputDsp[i].isStereo = true;
+                }
+                else
+                {
+                    name = "audio_in_" + std::to_string(i + 1) + "_m";
+                    jack_port_rename(m_client, m_inputDsp[i].port[0], name.c_str());
+                    jack_port_unregister(m_client, m_inputDsp[i].port[1]);
+                    m_inputDsp[i].isStereo = false;
+                }
+            }
+        }
+        // Delete existing channels
+        for (unsigned i = config.channelCount; i < curConfig.channelCount; i++)
+        {
+            jack_port_unregister(m_client, m_inputDsp[i].port[0]);
+            if (m_inputDsp[i].isStereo)
+            {
+                jack_port_unregister(m_client, m_inputDsp[i].port[1]);
+            }
+        }
+
+        // Add new channels
+        for (unsigned i = curConfig.channelCount; i < config.channelCount; i++)
+        {
+            if (config.channels[i].isStereo)
+            {
+                name = "audio_in_" + std::to_string(i + 1) + "_l";
+                m_inputDsp[i].port[0] = jack_port_register(m_client, name.c_str(), JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0);
+                name = "audio_in_" + std::to_string(i + 1) + "_r";
+                m_inputDsp[i].port[1] = jack_port_register(m_client, name.c_str(), JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0);
+                m_inputDsp[i].isStereo = true;
+            }
+            else
+            {
+                name = "audio_in_" + std::to_string(i + 1) + "_m";
+                m_inputDsp[i].port[0] = jack_port_register(m_client, name.c_str(), JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0);
+                m_inputDsp[i].isStereo = false;
+            }
+        }
+
+        // Check Connections
+        std::vector<std::string> cons;
+        cons.push_back("");
+        for (unsigned i = 0; i < config.channelCount; i++)
+        {
+            mck::SetConnection(m_client, m_inputDsp[i].port[0], config.channels[i].sourceLeft, true);
+            if (config.channels[i].isStereo)
+            {
+                mck::SetConnection(m_client, m_inputDsp[i].port[1], config.channels[i].sourceRight, true);
+            }
+        }
+
+        m_phase = PROC_FADE_IN;
+
+        //jack_activate(m_client);
+
+        SaveConfig(config, m_path.string());
+
+        return true;
     }
+    else
+    {
+        m_phase = PROC_UPDATING;
 
-    m_updateValues = true;
+        SaveConfig(config, m_path.string());
 
-    SaveConfig(config, m_path.string());
-
-    return true;
+        return true;
+    }
 }
 
 bool mck::Mixer::GetConfig(mck::Config &config)
@@ -244,12 +397,142 @@ bool mck::Mixer::AddChannel(bool isStereo, mck::Config &outConfig)
 
 bool mck::Mixer::RemoveChannel(unsigned idx, mck::Config &outConfig)
 {
-    return false;
+    GetConfig(outConfig);
+
+    if (idx >= outConfig.channelCount)
+    {
+        return false;
+    }
+
+    outConfig.channels.erase(outConfig.channels.begin() + idx);
+
+    bool ret = SetConfig(outConfig);
+    if (ret == false)
+    {
+        GetConfig(outConfig);
+    }
+
+    return ret;
+}
+
+bool mck::Mixer::ApplyConnectionCommand(mck::ConnectionCommand cmd, mck::Config &outConfig)
+{
+    std::vector<std::string> cons;
+    GetConfig(outConfig);
+
+    if (cmd.isInput)
+    {
+        if (cmd.idx >= outConfig.channelCount)
+        {
+            return false;
+        }
+
+        if (outConfig.channels[cmd.idx].isStereo)
+        {
+            if (cmd.subIdx > 1) {
+                return false;
+            }
+        }
+        else if (cmd.subIdx > 0)
+        {
+            return false;
+        }
+
+        if (cmd.command == "connect")
+        {
+            cons.push_back(cmd.target);
+
+            if (mck::NewConnections(m_client, m_inputDsp[cmd.idx].port[cmd.subIdx], cons))
+            {
+                if (mck::SetConnections(m_client, m_inputDsp[cmd.idx].port[cmd.subIdx], cons, true) == false)
+                {
+                    return false;
+                }
+                if (cmd.subIdx == 0)
+                {
+                    outConfig.channels[cmd.idx].sourceLeft = cons[0];
+                }
+                else
+                {
+                    outConfig.channels[cmd.idx].sourceRight = cons[0];
+                }
+                return SetConfig(outConfig);
+            }
+        }
+        else if (cmd.command == "disconnect")
+        {
+            if (mck::SetConnections(m_client, m_inputDsp[cmd.idx].port[cmd.subIdx], cons, true) == false)
+            {
+                return false;
+            }
+            if (cmd.subIdx == 0)
+            {
+                outConfig.channels[cmd.idx].sourceLeft = "";
+            }
+            else
+            {
+                outConfig.channels[cmd.idx].sourceRight = "";
+            }
+            return SetConfig(outConfig);
+        }
+    }
+    else
+    {
+        if (cmd.subIdx > 1)
+        {
+            return false;
+        }
+
+        if (cmd.command == "connect")
+        {
+            cons.push_back(cmd.target);
+
+            if (mck::NewConnections(m_client, m_audioOut[cmd.subIdx], cons))
+            {
+                if (mck::SetConnections(m_client, m_audioOut[cmd.subIdx], cons, true) == false)
+                {
+                    return false;
+                }
+                if (cmd.subIdx == 0)
+                {
+                    outConfig.targetLeft = cons;
+                }
+                else
+                {
+                    outConfig.targetRight = cons;
+                }
+                return SetConfig(outConfig);
+            }
+        }
+        else if (cmd.command == "disconnect")
+        {
+            if (mck::SetConnections(m_client, m_audioOut[cmd.subIdx], cons, true) == false)
+            {
+                return false;
+            }
+            if (cmd.subIdx == 0)
+            {
+                outConfig.targetLeft = cons;
+            }
+            else
+            {
+                outConfig.targetRight = cons;
+            }
+            return SetConfig(outConfig);
+        }
+    }
+
+    return true;
 }
 
 void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
 {
-    bool updateValues = m_updateValues.load();
+    char phase = m_phase.load();
+
+    if (phase == PROC_CLOSED)
+    {
+        return;
+    }
 
     // Output Channels
     m_bufferOut[0] = (jack_default_audio_sample_t *)jack_port_get_buffer(m_audioOut[0], nframes);
@@ -259,6 +542,11 @@ void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
     memset(m_bufferOut[0], 0, nframes * sizeof(jack_default_audio_sample_t));
     memset(m_bufferOut[1], 0, nframes * sizeof(jack_default_audio_sample_t));
 
+    if (phase == PROC_BYPASS)
+    {
+        return;
+    }
+
     memset(m_reverbBuffer[0], 0, m_bufferSize * sizeof(jack_default_audio_sample_t));
     memset(m_reverbBuffer[1], 0, m_bufferSize * sizeof(jack_default_audio_sample_t));
 
@@ -266,95 +554,77 @@ void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
     memset(m_delayBuffer[1], 0, m_bufferSize * sizeof(jack_default_audio_sample_t));
 
     // Input Channels
-    for (unsigned i = 0; i < m_nInputChans[m_activeConfig]; i++)
+    for (unsigned i = 0; i < m_config[m_activeConfig].channelCount; i++)
     {
-        m_bufferIn[i] = (jack_default_audio_sample_t *)jack_port_get_buffer(m_audioIn[i], nframes);
+        m_inputDsp[i].buffer[0] = (jack_default_audio_sample_t *)jack_port_get_buffer(m_inputDsp[i].port[0], nframes);
+        if (m_inputDsp[i].isStereo)
+        {
+            m_inputDsp[i].buffer[1] = (jack_default_audio_sample_t *)jack_port_get_buffer(m_inputDsp[i].port[1], nframes);
+        }
     }
 
     double updateGain;
-    if (updateValues)
-    {
-        m_updateCount = m_nInputChans[m_activeConfig] != m_nInputChans[m_newConfig];
-    }
 
-    // Input Processing
-    if (updateValues)
+    switch (phase)
     {
-        if (m_updateCount)
+    case PROC_FADE_OUT:
+    case PROC_CLOSING:
+        // Fade Out old dsp
+        for (unsigned i = 0; i < m_config[m_activeConfig].channelCount; i++)
         {
-            for (unsigned i = 0, jackIdx = 0; i < m_config[m_activeConfig].channelCount; i++, jackIdx++)
+            for (unsigned s = 0; s < nframes; s++)
             {
-                for (unsigned s = 0; s < nframes; s++)
-                {
-                    m_bufferIn[jackIdx][s] = m_interpolSqrt[nframes - s - 1] * m_config[m_activeConfig].channels[i].gainLin * m_bufferIn[jackIdx][s];
-                }
+                m_inputDsp[i].buffer[0][s] = m_interpolSqrt[nframes - s - 1] * m_config[m_activeConfig].channels[i].gainLin * m_inputDsp[i].buffer[0][s];
                 if (m_config[m_activeConfig].channels[i].isStereo)
                 {
-                    jackIdx += 1;
-                    for (unsigned s = 0; s < nframes; s++)
-                    {
-                        m_bufferIn[jackIdx][s] = m_interpolSqrt[nframes - s - 1] * m_config[m_activeConfig].channels[i].gainLin * m_bufferIn[jackIdx][s];
-                    }
+                    m_inputDsp[i].buffer[1][s] = m_interpolSqrt[nframes - s - 1] * m_config[m_activeConfig].channels[i].gainLin * m_inputDsp[i].buffer[1][s];
                 }
             }
         }
-        else
+        break;
+    case PROC_FADE_IN:
+        // Fade In new dsp
+        for (unsigned i = 0; i < m_config[m_activeConfig].channelCount; i++)
         {
-            for (unsigned i = 0, j = 0; i < m_config[m_activeConfig].channelCount; i++, j++)
+            for (unsigned s = 0; s < nframes; s++)
             {
-                for (unsigned s = 0; s < nframes; s++)
-                {
-                    m_bufferIn[j][s] = (m_interpolLin[s] * m_config[m_newConfig].channels[i].gainLin + m_interpolLin[nframes - s - 1] * m_config[m_activeConfig].channels[i].gainLin) * m_bufferIn[j][s];
-                }
+                m_inputDsp[i].buffer[0][s] = m_interpolSqrt[s] * m_config[m_activeConfig].channels[i].gainLin * m_inputDsp[i].buffer[0][s];
                 if (m_config[m_activeConfig].channels[i].isStereo)
                 {
-                    j++;
-                    for (unsigned s = 0; s < nframes; s++)
-                    {
-                        m_bufferIn[j][s] = (m_interpolLin[s] * m_config[m_newConfig].channels[i].gainLin + m_interpolLin[nframes - s - 1] * m_config[m_activeConfig].channels[i].gainLin) * m_bufferIn[j][s];
-                    }
+                    m_inputDsp[i].buffer[1][s] = m_interpolSqrt[s] * m_config[m_activeConfig].channels[i].gainLin * m_inputDsp[i].buffer[1][s];
                 }
             }
         }
-    }
-    else
-    {
-        if (m_updateCount)
+        break;
+    case PROC_UPDATING:
+        // Apply new values
+        for (unsigned i = 0; i < m_config[m_activeConfig].channelCount; i++)
         {
-            for (unsigned i = 0, jackIdx = 0; i < m_config[m_activeConfig].channelCount; i++, jackIdx++)
+            for (unsigned s = 0; s < nframes; s++)
             {
-                for (unsigned s = 0; s < nframes; s++)
-                {
-                    m_bufferIn[jackIdx][s] = m_interpolSqrt[s] * m_config[m_activeConfig].channels[i].gainLin * m_bufferIn[jackIdx][s];
-                }
+                m_inputDsp[i].buffer[0][s] = (m_interpolLin[s] * m_config[m_newConfig].channels[i].gainLin + m_interpolLin[nframes - s - 1] * m_config[m_activeConfig].channels[i].gainLin) * m_inputDsp[i].buffer[0][s];
                 if (m_config[m_activeConfig].channels[i].isStereo)
                 {
-                    jackIdx += 1;
-                    for (unsigned s = 0; s < nframes; s++)
-                    {
-                        m_bufferIn[jackIdx][s] = m_interpolSqrt[s] * m_config[m_activeConfig].channels[i].gainLin * m_bufferIn[jackIdx][s];
-                    }
+                    m_inputDsp[i].buffer[1][s] = (m_interpolLin[s] * m_config[m_newConfig].channels[i].gainLin + m_interpolLin[nframes - s - 1] * m_config[m_activeConfig].channels[i].gainLin) * m_inputDsp[i].buffer[1][s];
                 }
             }
         }
-        else
+        break;
+    case PROC_NORMAL:
+    default:
+        // Normal processing
+        for (unsigned i = 0; i < m_config[m_activeConfig].channelCount; i++)
         {
-            for (unsigned i = 0, jackIdx = 0; i < m_config[m_activeConfig].channelCount; i++, jackIdx++)
+            for (unsigned s = 0; s < nframes; s++)
             {
-                for (unsigned s = 0; s < nframes; s++)
-                {
-                    m_bufferIn[jackIdx][s] = m_config[m_activeConfig].channels[i].gainLin * m_bufferIn[jackIdx][s];
-                }
+                m_inputDsp[i].buffer[0][s] = m_config[m_activeConfig].channels[i].gainLin * m_inputDsp[i].buffer[0][s];
                 if (m_config[m_activeConfig].channels[i].isStereo)
                 {
-                    jackIdx += 1;
-                    for (unsigned s = 0; s < nframes; s++)
-                    {
-                        m_bufferIn[jackIdx][s] = m_config[m_activeConfig].channels[i].gainLin * m_bufferIn[jackIdx][s];
-                    }
+                    m_inputDsp[i].buffer[1][s] = m_config[m_activeConfig].channels[i].gainLin * m_inputDsp[i].buffer[1][s];
                 }
             }
         }
+        break;
     }
 
     // Mix Inputs to Output
@@ -362,7 +632,7 @@ void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
     double panR = 0.0;
     double revSend = 0.0;
     double dlySend = 0.0;
-    for (unsigned i = 0, j = 0; i < m_config[m_activeConfig].channelCount; i++, j++)
+    for (unsigned i = 0; i < m_config[m_activeConfig].channelCount; i++)
     {
         panR = std::sqrt(m_config[m_activeConfig].channels[i].pan / 100.0);
         panL = std::sqrt(1.0 - m_config[m_activeConfig].channels[i].pan / 100.0);
@@ -374,35 +644,33 @@ void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
             for (unsigned s = 0; s < nframes; s++)
             {
                 // Output
-                m_bufferOut[0][s] += m_config[m_activeConfig].gainLin * panL * m_bufferIn[j][s];
-                m_bufferOut[1][s] += m_config[m_activeConfig].gainLin * panR * m_bufferIn[j + 1][s];
+                m_bufferOut[0][s] += m_config[m_activeConfig].gainLin * panL * m_inputDsp[i].buffer[0][s];
+                m_bufferOut[1][s] += m_config[m_activeConfig].gainLin * panR * m_inputDsp[i].buffer[1][s];
 
                 // Reverb
-                m_reverbBuffer[0][s] += revSend * panL * m_bufferIn[j][s];
-                m_reverbBuffer[1][s] += revSend * panR * m_bufferIn[j + 1][s];
+                m_reverbBuffer[0][s] += revSend * panL * m_inputDsp[i].buffer[0][s];
+                m_reverbBuffer[1][s] += revSend * panR * m_inputDsp[i].buffer[1][s];
 
                 // Delay
-                m_delayBuffer[0][s] += dlySend * panL * m_bufferIn[j][s];
-                m_delayBuffer[1][s] += dlySend * panR * m_bufferIn[j + 1][s];
+                m_delayBuffer[0][s] += dlySend * panL * m_inputDsp[i].buffer[0][s];
+                m_delayBuffer[1][s] += dlySend * panR * m_inputDsp[i].buffer[1][s];
             }
-
-            j++;
         }
         else
         {
             for (unsigned s = 0; s < nframes; s++)
             {
                 // Output
-                m_bufferOut[0][s] += m_config[m_activeConfig].gainLin * panL * m_bufferIn[j][s];
-                m_bufferOut[1][s] += m_config[m_activeConfig].gainLin * panR * m_bufferIn[j][s];
+                m_bufferOut[0][s] += m_config[m_activeConfig].gainLin * panL * m_inputDsp[i].buffer[0][s];
+                m_bufferOut[1][s] += m_config[m_activeConfig].gainLin * panR * m_inputDsp[i].buffer[0][s];
 
                 // Reverb
-                m_reverbBuffer[0][s] += revSend * panL * m_bufferIn[j][s];
-                m_reverbBuffer[1][s] += revSend * panR * m_bufferIn[j][s];
+                m_reverbBuffer[0][s] += revSend * panL * m_inputDsp[i].buffer[0][s];
+                m_reverbBuffer[1][s] += revSend * panR * m_inputDsp[i].buffer[0][s];
 
                 // Delay
-                m_delayBuffer[0][s] += dlySend * panL * m_bufferIn[j][s];
-                m_delayBuffer[1][s] += dlySend * panR * m_bufferIn[j][s];
+                m_delayBuffer[0][s] += dlySend * panL * m_inputDsp[i].buffer[0][s];
+                m_delayBuffer[1][s] += dlySend * panR * m_inputDsp[i].buffer[0][s];
             }
         }
     }
@@ -422,23 +690,27 @@ void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
         m_bufferOut[1][s] += m_config[m_activeConfig].gainLin * m_config[m_activeConfig].delay.gainLin * m_delayBuffer[1][s];
     }
 
-    if (updateValues)
+    switch (phase)
     {
-        m_updateValues = false;
+    case PROC_UPDATING:
+        m_phase = PROC_NORMAL;
         m_activeConfig = m_newConfig;
+        break;
+    case PROC_FADE_OUT:
+        m_phase = PROC_BYPASS;
+        m_activeConfig = m_newConfig;
+        m_updateCond.notify_all();
+        break;
+    case PROC_FADE_IN:
+        m_phase = PROC_NORMAL;
+        break;
+    case PROC_CLOSING:
+        m_phase = PROC_CLOSED;
+        m_updateCond.notify_all();
+        break;
+    default:
+        break;
     }
-    else if (m_updateCount)
-    {
-        m_updateCount = false;
-    }
-
-    /*
-    jack_default_audio_sample_t *in_l = (jack_default_audio_sample_t *)jack_port_get_buffer(audio_in_l, nframes);
-    jack_default_audio_sample_t *in_r = (jack_default_audio_sample_t *)jack_port_get_buffer(audio_in_r, nframes);
-    jack_default_audio_sample_t *out_l = (jack_default_audio_sample_t *)jack_port_get_buffer(audio_out_l, nframes);
-    jack_default_audio_sample_t *out_r = (jack_default_audio_sample_t *)jack_port_get_buffer(audio_out_r, nframes);
-
-    reverb->processreplace(in_l, in_r, out_l, out_r, nframes);*/
 }
 
 void mck::Mixer::ProcessReverb(jack_nframes_t nframes, float rt60, unsigned type)

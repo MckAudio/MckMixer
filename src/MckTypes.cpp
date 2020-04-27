@@ -28,6 +28,24 @@ void mck::from_json(const nlohmann::json &j, ChannelCommand &c)
     c.idx = j.at("idx").get<unsigned>();
 }
 
+// CONNECTION COMMAND
+void mck::to_json(nlohmann::json &j, const ConnectionCommand &c)
+{
+    j["isInput"] = c.isInput;
+    j["idx"] = c.idx;
+    j["subIdx"] = c.subIdx;
+    j["command"] = c.command;
+    j["target"] = c.target;
+}
+void mck::from_json(const nlohmann::json &j, ConnectionCommand &c)
+{
+    c.isInput = j.at("isInput").get<bool>();
+    c.idx = j.at("idx").get<unsigned>();
+    c.subIdx = j.at("subIdx").get<unsigned>();
+    c.command = j.at("command").get<std::string>();
+    c.target = j.at("target").get<std::string>();
+}
+
 // CHANNEL
 void mck::to_json(nlohmann::json &j, const Channel &c)
 {

@@ -9,16 +9,22 @@
   - [ ] Tempo and Time mode switchable (secs vs tabs per step)
   - [ ] Tempo sync (MIDI)
 - [X] Reverb FX Bus
-  - [ ] More reverb type
+  - [X] More reverb type
   - [ ] More reverb controls
 - [X] HTML GUI with websocket communication
-  - [ ] Sleek design
+  - [X] Sleek design
+  - [ ] Dark theme
 - [ ] Saving and loading JACK connections
   - [ ] Controlling connections from GUI
 - [ ] MIDI Control
+  - [ ] Settings page with MIDI learn
 - [ ] Master bus recording
+  - [ ] Looper functionality with MIDI sync, MIDI control & overdubbing
+  - [ ] Define folder for recordings
 - [ ] Architecture
-  - [ ] Bind JACK ports to channel buffer
+  - [X] Bind JACK ports to channel buffer
+  - [ ] Save & load presets on the fly
+  - [ ] Backup folder for presets / config
 
 
 ## Building
