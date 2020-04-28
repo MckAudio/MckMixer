@@ -489,7 +489,7 @@ bool mck::Mixer::ApplyConnectionCommand(mck::ConnectionCommand cmd, mck::Config 
 
             if (mck::NewConnections(m_client, m_audioOut[cmd.subIdx], cons))
             {
-                if (mck::SetConnections(m_client, m_audioOut[cmd.subIdx], cons, true) == false)
+                if (mck::SetConnections(m_client, m_audioOut[cmd.subIdx], cons, false) == false)
                 {
                     return false;
                 }
@@ -506,7 +506,7 @@ bool mck::Mixer::ApplyConnectionCommand(mck::ConnectionCommand cmd, mck::Config 
         }
         else if (cmd.command == "disconnect")
         {
-            if (mck::SetConnections(m_client, m_audioOut[cmd.subIdx], cons, true) == false)
+            if (mck::SetConnections(m_client, m_audioOut[cmd.subIdx], cons, false) == false)
             {
                 return false;
             }

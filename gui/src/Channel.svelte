@@ -1,7 +1,8 @@
 <script>
   import SliderLabel from "./SliderLabel.svelte";
   import Slider from "./Slider.svelte";
-  import { DbToLog, LogToDb, FormatPan } from "./Tools.svelte";
+  import Select from "./Select.svelte";
+  import { DbToLog, LogToDb, FormatPan, FormatCon } from "./Tools.svelte";
 
   export let data = undefined;
   export let SendValue = undefined;
@@ -116,35 +117,30 @@
   <i>Source:</i>
   {#if data.isStereo}
     <div class="splitter">
-    <select class="left"on:click={()=> SendMsg("request","source", "")} on:change={_e => {
-      ConnectChannel(_e.target.value, false);
-    }}>
-      <option style="display: none" selected>{data.sourceLeft}</option>
-      <option value="disconnect"><i>Disconnect</i></option>
-      {#each sources as source}
-        <option val={source}>{source}</option>
-      {/each}
-    </select>
-    <select class="right" on:click={()=> SendMsg("request","source", "")} on:change={_e => {
-      ConnectChannel(_e.target.value, true);
-    }}>
-      <option style="display: none" selected>{data.sourceRight}</option>
-      <option value="disconnect"><i>Disconnect</i></option>
-      {#each sources as source}
-        <option val={source}>{source}</option>
-      {/each}
-    </select>
-    </div>
+      <Select
+        items={sources}
+        value={data.sourceLeft}
+        numeric={false}
+        Opener={() => SendMsg('request', 'source', '')}
+        Handler={_v => ConnectChannel(_v, false)}
+        Formatter={FormatCon} />
+
+      <Select
+        items={sources}
+        value={data.sourceRight}
+        numeric={false}
+        Opener={() => SendMsg('request', 'target', '')}
+        Handler={_v => ConnectChannel(_v, true)}
+        Formatter={FormatCon} />
+        </div>
   {:else}
-    <select on:click={()=> SendMsg("request","source", "")} on:change={_e => {
-      ConnectChannel(_e.target.value, false);
-    }}>
-      <option style="display: none" selected>{data.sourceLeft}</option>
-      <option value="disconnect"><i>Disconnect</i></option>
-      {#each sources as source}
-        <option val={source}>{source}</option>
-      {/each}
-    </select>
+      <Select
+        items={sources}
+        value={data.sourceLeft}
+        numeric={false}
+        Opener={() => SendMsg('request', 'source', '')}
+        Handler={_v => ConnectChannel(_v, false)}
+        Formatter={FormatCon} />
   {/if}
   </div>
   <div class="control">

@@ -162,7 +162,7 @@
 <div class="base">
   {#if data != undefined}
     <div class="settings">
-      <Settings {data} {SendValue} {SendMsg} />
+      <Settings {data} SendValue={(t,v) => SendValue(0, 'master', t, v)} {SendMsg} {targets}/>
     </div>
     <div class="channels">
       {#each data.channels as chan, i}

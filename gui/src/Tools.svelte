@@ -37,6 +37,11 @@
     return _str;
   }
 
+  export function FormatCon(_str) {
+    _str = _str.toString();
+    return _str.substring(_str.indexOf(":") + 1);
+  }
+
   // https://stackoverflow.com/a/5598797
   export function GetOffsetLeft(elem) {
     var offsetLeft = 0;
@@ -47,7 +52,7 @@
     } while ((elem = elem.offsetParent));
     return offsetLeft;
   }
-    export function GetOffsetTop(elem) {
+  export function GetOffsetTop(elem) {
     var offsetTop = 0;
     do {
       if (!isNaN(elem.offsetTop)) {
