@@ -10,3 +10,6 @@
 [submodule "helper"]
 	path = helper
 	url = git@github.com:HenriCSHC/MckHelper.git
+[submodule "webview"]
+	path = webview
+	url = https://github.com/zserge/webview.git

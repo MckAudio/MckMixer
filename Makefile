@@ -31,7 +31,10 @@ OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 
 LSRCS = ./src/main.cpp ./src/MckTypes.cpp ./src/MckMixer.cpp ./src/MckDelay.cpp ./helper/JackHelper.cpp ./helper/DspHelper.cpp
 LMINCS = -I./src -I./helper -I/usr/local/include/libfreeverb3-3 -I./uWebSockets/src -I./uWebSockets/uSockets/src -I./json/single_include
-LMLIBS = -L/usr/local/lib -lfreeverb3 -ljack ./uWebSockets/uSockets/*.o -lz
+# LMINCS += -I./webview
+LMLIBS = -L/usr/local/lib -lfreeverb3 -ljack ./uWebSockets/uSockets/*.o -lz 
+# LMLIBS += -lpthread
+# LMLIBS += `pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0`
 
 
 release:

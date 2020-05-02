@@ -10,12 +10,13 @@
   export let Formatter = undefined;
 
   let show = false;
-  let pos = [0.0, 0.0];
+  let pos = [0.0, 0.0, 0.0];
+  let opener = undefined;
 
   function OpenSelect(_e) {
-    console.log(_e);
-    pos[0] = GetOffsetLeft(_e.target);
-    pos[1] = GetOffsetTop(_e.target) + _e.target.offsetHeight;
+    pos[0] = GetOffsetLeft(opener);
+    pos[1] = GetOffsetTop(opener) + opener.offsetHeight;
+    pos[2] = opener.offsetWidth;
     console.log(pos);
     show = !show;
     if (show && Opener) {
@@ -31,6 +32,7 @@
     font-family: mck-lato;
     line-height: 20px;
     text-align: center;
+        box-shadow: 0px 1px 2px 0px #555;
   }
   .opener {
       background-color: #f0f0f0;
@@ -38,12 +40,17 @@
     border: 1px solid #222;
     cursor: pointer;
     overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    display: grid;
+    grid-template-columns: 1fr auto;
   }
   .opener:hover {
     background-color: #666;
     color: #f0f0f0;
+  }
+  .opener > .text {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
   .select {
     position: fixed;
@@ -63,15 +70,18 @@
   }
 </style>
 
-<div class="opener" on:click={OpenSelect}>
+<div class="opener" bind:this={opener} on:click={OpenSelect}>
+<span class="text">
   {#if value === undefined || value === ''}
     <i>Select</i>
   {:else if numeric}
     {#if Formatter}{Formatter(items[value])}{:else}{items[value]}{/if}
   {:else if Formatter}{Formatter(value)}{:else}{value}{/if}
+  </span>
+  <span class="{show ? 'mck-arrow_drop_up': 'mck-arrow_drop_down'}"/>
 </div>
 {#if show}
-  <div class="select" style="left: {pos[0]}px; top: {pos[1]}px;">
+  <div class="select" style="left: {pos[0]}px; top: {pos[1]}px; min-width: {pos[2]}px;">
     {#each items as item, i}
       <div
         on:click={() => {

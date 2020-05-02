@@ -1,6 +1,6 @@
 <script>
   import { onMount, onDestroy } from "svelte";
-  import { GetOffsetLeft, GetOffsetTop, GetScrollLeft } from "./Tools.svelte";
+  import { GetOffsetLeft, GetOffsetTop } from "./Tools.svelte";
 
   export let vertical = false;
   export let Handler = undefined;
@@ -47,7 +47,6 @@
             );
         } else {
           offset = GetOffsetLeft(base);
-          offset -= GetScrollLeft(base);
           _val = Math.max(
             0.0,
             Math.min(1.0, (_evt.touches[0].clientX - offset) / elemWidth)
@@ -111,7 +110,6 @@
             1.0 - Math.max(0.0, Math.min(1.0, (_evt.y - offset) / elemHeight));
         } else {
           offset = GetOffsetLeft(base);
-          offset -= GetScrollLeft(base);
           _val = Math.max(0.0, Math.min(1.0, (_evt.x - offset) / elemWidth));
         }
         if (Handler) {
@@ -128,7 +126,6 @@
             1.0 - Math.max(0.0, Math.min(1.0, (_evt.y - offset) / elemHeight));
         } else {
           offset = GetOffsetLeft(base);
-          offset -= GetScrollLeft(base);
           _val = Math.max(0.0, Math.min(1.0, (_evt.x - offset) / elemWidth));
         }
         if (Handler) {
@@ -149,15 +146,15 @@
     window.addEventListener("contextmenu", e => e.preventDefault());
     document.addEventListener("mousemove", MouseHandler);
     document.addEventListener("mouseup", MouseHandler);
-    //document.addEventListener("touchmove", TouchHandler);
-    //document.addEventListener("touchend", TouchHandler);
+    document.addEventListener("touchmove", TouchHandler);
+    document.addEventListener("touchend", TouchHandler);
   });
 
   onDestroy(() => {
     document.removeEventListener("mousemove", MouseHandler);
     document.removeEventListener("mouseup", MouseHandler);
-    //document.removeEventListener("touchmove", TouchHandler);
-    //document.removeEventListener("touchend", TouchHandler);
+    document.removeEventListener("touchmove", TouchHandler);
+    document.removeEventListener("touchend", TouchHandler);
   });
 </script>
 
@@ -168,7 +165,9 @@
     border: 1px solid #222;
     border-radius: 2px;
     cursor: pointer;
-    box-shadow: 0px 1px 2px 0px #555;
+  }
+  .base > div {
+    height: 24px
   }
 
   .blend {
@@ -226,26 +225,21 @@
       style="top: {100 - curHeight}%; height: {curHeight}%" />
   {:else}
     <div
-      class="blend bg"
-      style="width: {elemWidth}px; height: {elemHeight}px;" />
+      class="blend bg"/>
     {#if centered}
       <div
         class="blend slider hori"
-        style="left: {curValue >= 0.5 ? '50%' : `${curValue * elemWidth}px`}; width: {Math.abs((curValue - 0.5) * elemWidth)}px; height: {elemHeight}px;" />
+        style="left: {curValue >= 0.5 ? '50%' : `${curValue * 100}%`}; width: {Math.abs((curValue - 0.5) * 100)}%;" />
     {:else}
       <div
-        class="blend slider hori"
-        style="width: {curValue * elemWidth}px; height: {elemHeight}px;" />
+        class="blend slider hori" style="width: {curValue * 100}%"/>
     {/if}
     <div
-      class="blend fg {centered ? 'centered' : ''}"
-      style="width: {elemWidth}px; height: {elemHeight}px;" />
-    <span
-      style="width: {elemWidth}px; height: {elemHeight}px; line-height: {elemHeight}px;">
+      class="blend fg {centered ? 'centered' : ''}" />
+    <span>
       {label}
     </span>
     <div
-      class="blend border"
-      style="width: {elemWidth}px; height: {elemHeight}px;" />
+      class="blend border" />
   {/if}
 </div>

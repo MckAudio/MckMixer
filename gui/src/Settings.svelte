@@ -1,6 +1,7 @@
 <script>
   import SliderLabel from "./SliderLabel.svelte";
   import Select from "./Select.svelte";
+  import Button from "./Button.svelte";
   import { DbToLog, LogToDb, FormatCon } from "./Tools.svelte";
 
   export let data = undefined;
@@ -87,8 +88,8 @@
   <div class="control">
     <i>New Channel:</i>
     <div class="splitter">
-      <button type="button" on:click={() => AddChannel(false)}>Mono</button>
-      <button type="button" on:click={() => AddChannel(true)}>Stereo</button>
+      <Button Handler={() => AddChannel(false)}>Mono</Button>
+      <Button Handler={() => AddChannel(true)}>Stereo</Button>
     </div>
   </div>
   <!-- TARGET -->
@@ -149,5 +150,11 @@
       label={Math.round(data.gain) + ' dB'}
       value={DbToLog(data.gain)}
       Handler={_v => SendValue('gain', LogToDb(_v))} />
+  </div>
+
+  <!-- CLOSE -->
+  <div class="control">
+    <i>Controls:</i>
+    <Button Handler={()=>{SendMsg("command","system","close")}}>Close</Button>
   </div>
 </div>

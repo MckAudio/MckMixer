@@ -2,6 +2,7 @@
   import SliderLabel from "./SliderLabel.svelte";
   import Slider from "./Slider.svelte";
   import Select from "./Select.svelte";
+  import Button from "./Button.svelte";
   import { DbToLog, LogToDb, FormatPan, FormatCon } from "./Tools.svelte";
 
   export let data = undefined;
@@ -43,7 +44,7 @@
     width: calc(100% - 8px);
     height: calc(100% - 8px);
     display: grid;
-    grid-auto-rows: minmax(min-content, max-content);
+    grid-auto-rows: min-content; /*minmax(min-content, max-content);*/
     grid-gap: 4px;
     border-radius: 2px;
   }
@@ -58,7 +59,7 @@
 
   .control {
     display: grid;
-    grid-template-rows: auto minmax(24px, auto);
+    grid-template-rows: auto 24px;
     grid-row-gap: 2px;
     row-gap: 2px;
     font-size: 14px;
@@ -101,22 +102,19 @@
   <div class="control">
     <i>Type:</i>
     <div class="splitter">
-      <button
-        class="left {data.isStereo ? '' : 'active'}"
-        on:click={() => SendValue('isStereo', false)}>
+      <Button
+        value={data.isStereo == false}
+        Handler={() => SendValue('isStereo', false)}>
         Mono
-      </button>
-      <button
-        class="right {data.isStereo ? 'active' : ''}"
-        on:click={() => SendValue('isStereo', true)}>
+      </Button>
+      <Button value={data.isStereo} Handler={() => SendValue('isStereo', true)}>
         Stereo
-      </button>
+      </Button>
     </div>
   </div>
-  <div class="control">
-  <i>Source:</i>
   {#if data.isStereo}
-    <div class="splitter">
+    <div class="control">
+      <i>Left Source:</i>
       <Select
         items={sources}
         value={data.sourceLeft}
@@ -124,7 +122,9 @@
         Opener={() => SendMsg('request', 'source', '')}
         Handler={_v => ConnectChannel(_v, false)}
         Formatter={FormatCon} />
-
+    </div>
+    <div class="control">
+      <i>Right Source:</i>
       <Select
         items={sources}
         value={data.sourceRight}
@@ -132,17 +132,20 @@
         Opener={() => SendMsg('request', 'target', '')}
         Handler={_v => ConnectChannel(_v, true)}
         Formatter={FormatCon} />
-        </div>
+    </div>
   {:else}
+    <div class="control">
+      <i>Source:</i>
       <Select
-        items={sources}
+        items={["disconnect", ...sources]}
         value={data.sourceLeft}
         numeric={false}
         Opener={() => SendMsg('request', 'source', '')}
         Handler={_v => ConnectChannel(_v, false)}
         Formatter={FormatCon} />
+    </div>
+  <div class="rest" />
   {/if}
-  </div>
   <div class="control">
     <i>Pan:</i>
     <SliderLabel
@@ -176,8 +179,6 @@
   <div class="rest" />
   <div class="control">
     <i>Controls:</i>
-    <button type="button" on:click={() => RemoveChannel()}>
-      Delete Channel
-    </button>
+    <Button Handler={() => RemoveChannel()}>Delete Channel</Button>
   </div>
 </div>

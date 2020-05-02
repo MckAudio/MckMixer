@@ -14,8 +14,8 @@
 - [X] HTML GUI with websocket communication
   - [X] Sleek design
   - [ ] Dark theme
-- [ ] Saving and loading JACK connections
-  - [ ] Controlling connections from GUI
+- [X] Saving and loading JACK connections
+  - [X] Controlling connections from GUI
 - [ ] MIDI Control
   - [ ] Settings page with MIDI learn
 - [ ] Master bus recording
@@ -32,7 +32,7 @@
 ### Build dependencies
 
 ```
-sudo apt install libfftw3-dev libjack-jackd2-
+sudo apt install libfftw3-dev libjack-jackd2-dev
 
 sudo ld-config
 ```

@@ -28,37 +28,33 @@ struct PerSocketData
 };
 
 mck::Mixer m_mixer;
+uWS::App m_ws;
+us_listen_socket_t *m_listenSocket;
 
 static void SignalHandler(int sig)
 {
     fprintf(stdout, "Signal %d received, exiting...\n", sig);
-
+    /*
+    if (m_listenSocket != nullptr) {
+        us_listen_socket_close(0, m_listenSocket);
+    }
+    */
     m_mixer.Close();
+
     exit(0);
 }
-
-int main(int argc, char **argv)
+/*
+void GuiHandler()
 {
-    struct passwd *pw = getpwuid(getuid());
-    fs::path configPath(pw->pw_dir);
-    configPath.append(".mck").append("mixer");
-    if (fs::exists(configPath) == false)
-    {
-        fs::create_directories(configPath);
-    }
-    configPath.append("config.json");
+    m_win = webview::webview(true, nullptr);
+    m_win.set_title("Localhost");
+    m_win.set_size(480, 320, WEBVIEW_HINT_NONE);
+    m_win.navigate("http://localhost:9001");
+    m_win.run();
+}*/
 
-    if (m_mixer.Init(configPath.string()) == false)
-    {
-        return EXIT_FAILURE;
-    }
-
-    signal(SIGQUIT, SignalHandler);
-    signal(SIGTERM, SignalHandler);
-    signal(SIGHUP, SignalHandler);
-    signal(SIGINT, SignalHandler);
-
-    //sleep(-1);
+void WsHandler(us_listen_socket_t **socket)
+{
 
     /* Keep in mind that uWS::SSLApp({options}) is the same as uWS::App() when compiled without SSL support.
      * You may swap to using uWS:App() if you don't need SSL */
@@ -122,21 +118,25 @@ int main(int argc, char **argv)
             /* Open event here, you may access ws->getUserData() which points to a PerSocketData struct */ },
                                   .message = [&](auto *ws, std::string_view message, uWS::OpCode opCode) {
             PerSocketData *userData = (PerSocketData *)ws->getUserData();
-            std::cout << "MSG from " << userData->id << ": " << message << std::endl;
+            //std::cout << "MSG from " << userData->id << ": " << message << std::endl;
             mck::Message msg;
             try
             {
                 json j = json::parse(message);
                 msg = j;
-                std::printf("Section: %s - MsgType: %s\nData: %s\n", msg.section.c_str(), msg.msgType.c_str(), msg.data.c_str());
+                //std::printf("Section: %s - MsgType: %s\nData: %s\n", msg.section.c_str(), msg.msgType.c_str(), msg.data.c_str());
             }
             catch (std::exception &e)
             {
                 std::cout << "Failed to convert the message: " << std::endl
                           << e.what() << std::endl;
+                return;
             }
-
-            if (msg.msgType == "partial" && msg.section == "config")
+            if (msg.msgType == "ping") {
+                mck::Message outMsg("system", "pong");
+                json jOut = outMsg;
+                ws->send(jOut.dump(), uWS::OpCode::TEXT);
+            } else if (msg.msgType == "partial" && msg.section == "config")
             {
                 mck::Config _config;
                 json j = json::parse(msg.data);
@@ -158,7 +158,11 @@ int main(int argc, char **argv)
                 json jOut = outMsg;
                 ws->send(jOut.dump(), uWS::OpCode::TEXT);
             } else if (msg.msgType == "command") {
-            if (msg.section == "channel") {
+                if (msg.section == "system") {
+                    if (msg.data == "close") {
+                        SignalHandler(15);
+                    }
+                } else if (msg.section == "channel") {
                 json j = json::parse(msg.data);
                 mck::ChannelCommand cc;
                 mck::Config config;
@@ -227,13 +231,38 @@ int main(int argc, char **argv)
             /* Not implemented yet */ },
                                   .close = [](auto *ws, int code, std::string_view message) {
             /* You may access ws->getUserData() here */ }})
-        .listen(9001, [](auto *token) {
-            if (token)
+        .listen(9001, [&](us_listen_socket_t *sock) {
+            if (sock)
             {
+                *socket = sock;
                 std::cout << "Listening on port " << 9001 << std::endl;
             }
         })
         .run();
+}
+
+int main(int argc, char **argv)
+{
+    struct passwd *pw = getpwuid(getuid());
+    fs::path configPath(pw->pw_dir);
+    configPath.append(".mck").append("mixer");
+    if (fs::exists(configPath) == false)
+    {
+        fs::create_directories(configPath);
+    }
+    configPath.append("config.json");
+
+    if (m_mixer.Init(configPath.string()) == false)
+    {
+        return EXIT_FAILURE;
+    }
+
+    signal(SIGQUIT, SignalHandler);
+    signal(SIGTERM, SignalHandler);
+    signal(SIGHUP, SignalHandler);
+    signal(SIGINT, SignalHandler);
+
+    WsHandler(&m_listenSocket);
 
     m_mixer.Close();
 

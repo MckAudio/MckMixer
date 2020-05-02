@@ -52,6 +52,15 @@
     } while ((elem = elem.offsetParent));
     return offsetLeft;
   }
+  export function GetScrollLeft(elem) {
+    var scrollLeft = 0;
+    do {
+      if (!isNaN(elem.scrollLeft)) {
+        scrollLeft += elem.scrollLeft;
+      }
+    } while((elem = elem.parentElement));
+    return scrollLeft;
+  }
   export function GetOffsetTop(elem) {
     var offsetTop = 0;
     do {

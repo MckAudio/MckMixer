@@ -13,6 +13,7 @@
   let port = 9001;
   let socket = undefined;
   let socketConnected = false;
+  let pingId = -1;
   let gain = 0.0;
   let data = undefined;
   let sources = [];
@@ -44,8 +45,15 @@
     }
   }
   function RecvMsg(_msg) {
+    if (_msg === undefined) {
+      return;
+    }
     let _tmp = JSON.parse(_msg);
-    console.log("[MSG]", _tmp);
+    //console.log("[MSG]", _tmp);
+    if (_tmp.msgType == "pong") {
+      RecvPing();
+      return;
+    }
     if (_tmp.msgType == "partial") {
       if (_tmp.section == "config") {
         let _data = JSON.parse(_tmp.data);
@@ -60,6 +68,11 @@
     }
   }
 
+  function RecvPing() {
+    window.clearTimeout(pingId);
+    pingId = window.setTimeout(SendPing, 1000);
+  }
+
   function SendMsg(_msgType, _section, _data) {
     let _msg = {
       msgType: _msgType,
@@ -71,6 +84,20 @@
     }
   }
 
+  function SendPing() {
+    window.clearTimeout(pingId);
+    let _msg = {
+      msgType: "ping",
+      section: "system",
+      data: ""
+    };
+    if (socketConnected) {
+      socket.send(JSON.stringify(_msg));
+    } else {
+      pingId = window.setTimeout(SendPing, 1000);
+    }
+  }
+
   function Connect(_url, _port) {
     let _uri = `${_url}:${_port}`;
     console.log(_uri);
@@ -78,6 +105,7 @@
     socket.onopen = _evt => {
       console.log("WS was opened!");
       socketConnected = true;
+      pingId = window.setTimeout(SendPing, 1000);
     };
     socket.onclose = _evt => {
       console.log("WS was closed!");
@@ -118,8 +146,8 @@
     height: 100%;
     display: grid;
     grid-template-columns: auto 1fr auto auto;
-    grid-row-gap: 1px;
-    grid-column-gap: 1px;
+    /*grid-row-gap: 1px;
+    grid-column-gap: 1px;*/
     background-color: #333;
   }
   .settings {
@@ -127,15 +155,22 @@
     overflow-y: auto;
     padding: 8px;
     background-color: #f0f0f0;
+    z-index: 10;
+    box-shadow: 1px 0px 4px 1px #555;
   }
   .channels {
     grid-column: 2/3;
     padding: 8px;
     height: calc(100% - 16px);
     width: calc(100% - 16px);
+    overflow-x: auto;
+    overflow-y: hidden;
     background-color: #f0f0f0;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    /*grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));*/
+    grid-auto-flow: column;
+    grid-auto-columns: 140px; /*minmax(140px, max-content);*/
+    grid-template-rows: 1fr;
     /*
     grid-auto-columns: min-content;
     grid-auto-flow: column;*/
@@ -151,6 +186,8 @@
     grid-template-columns: 140px;
     grid-template-rows: 1fr 1fr;
     grid-gap: 8px;
+    z-index: 10;
+    box-shadow: -1px 0px 4px 1px #555;
   }
   .master {
     grid-column: -2/-1;
@@ -184,6 +221,7 @@
         data={data.delay}
         SendValue={(t, v) => SendValue(null, 'delay', t, v)} />
     </div>
+    <!--
     <div class="master">
       {#if data != undefined}
         <Slider
@@ -192,5 +230,6 @@
           Handler={_v => SendValue(undefined, 'master', 'gain', LogToDb(_v))} />
       {/if}
     </div>
+    -->
   {/if}
 </div>

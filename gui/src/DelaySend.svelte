@@ -1,6 +1,7 @@
 <script>
   import SliderLabel from "./SliderLabel.svelte";
   import Slider from "./Slider.svelte";
+  import Select from "./Select.svelte";
   import { DbToLog, LogToDb, FormatPan } from "./Tools.svelte";
 
   export let data = undefined;
@@ -59,17 +60,12 @@
   <span>Delay</span>
   <div class="control">
     <i>Type:</i>
-    <select
+    <Select
+      items={types}
       value={data.type}
-      on:change={_e => {
-        SendValue('type', Number(_e.target.value));
-        _e.target.selectedIndex = 0;
-      }}>
-      <option style="display: none" selected>{types[data.type]}</option>
-      {#each types as type, i}
-        <option value={i}>{type}</option>
-      {/each}
-    </select>
+      Handler={_v => 
+        SendValue('type', _v)
+      }/>
   </div>
   <div class="control">
     <i>Delay:</i>
