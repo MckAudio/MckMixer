@@ -3,6 +3,7 @@
   import Slider from "./Slider.svelte";
   import Select from "./Select.svelte";
   import Button from "./Button.svelte";
+  import InputText from "./InputText.svelte";
   import { DbToLog, LogToDb, FormatPan, FormatCon } from "./Tools.svelte";
 
   export let data = undefined;
@@ -59,7 +60,7 @@
 
   .control {
     display: grid;
-    grid-template-rows: auto 24px;
+    grid-template-rows: auto minmax(24px, auto);
     grid-row-gap: 2px;
     row-gap: 2px;
     font-size: 14px;
@@ -98,7 +99,7 @@
 
 <div class="base">
   <i>{index + 1}</i>
-  <span>{data.name}</span>
+  <InputText value={data.name} Handler={_v=>SendValue('name', _v)}/>
   <div class="control">
     <i>Type:</i>
     <div class="splitter">

@@ -5,14 +5,13 @@
 
 <style>
   .main {
-    display: grid;
-    grid-template-rows: 1fr auto 1fr;
     background-color: #f0f0f0;
     color: #222;
     border: 1px solid #222;
     border-radius: 2px;
-    width: calc(100% - 2px);
-    height: calc(100% - 2px);
+    width: calc(100% - 10px);
+    height: calc(100% - 10px);
+    padding: 4px;
     cursor: pointer;
     font-family: mck-lato;
     font-size: 14px;

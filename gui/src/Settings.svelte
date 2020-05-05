@@ -38,7 +38,6 @@
   .base {
     display: grid;
     grid-auto-rows: auto;
-    width: 160px;
     font-size: 14px;
     font-family: mck-lato;
     row-gap: 4px;
@@ -94,8 +93,7 @@
   </div>
   <!-- TARGET -->
   <div class="control">
-    <i>Output Target:</i>
-    <div class="splitter">
+    <i>Left Output Target:</i>
       <Select
         items={targets}
         value={data.targetLeft}
@@ -103,7 +101,9 @@
         Opener={() => SendMsg('request', 'target', '')}
         Handler={_v => ConnectMaster(_v, false)}
         Formatter={FormatCon} />
-
+</div>
+<div class="control">
+  <i>Right Output Target:</i>
       <Select
         items={targets}
         value={data.targetRight}
@@ -111,36 +111,6 @@
         Opener={() => SendMsg('request', 'target', '')}
         Handler={_v => ConnectMaster(_v, true)}
         Formatter={FormatCon} />
-      <!--
-    <select class="left"on:click={()=> SendMsg("request","target", "")} on:change={_e => {
-      ConnectMaster(_e.target.value, false);
-    }}>
-      <option style="display: none" selected>{FormatCon(data.targetLeft)}</option>
-      <option value="disconnect"><i>Disconnect</i></option>
-      {#each targets as target}
-        <option val={target}>{target}</option>
-      {/each}
-    </select>
-    -->
-      <!--
-      <select
-        class="right"
-        on:click={() => SendMsg('request', 'target', '')}
-        on:change={_e => {
-          ConnectMaster(_e.target.value, true);
-        }}>
-        <option style="display: none" selected>
-          {FormatCon(data.targetRight)}
-        </option>
-        <option value="disconnect">
-          <i>Disconnect</i>
-        </option>
-        {#each targets as target}
-          <option val={target}>{target}</option>
-        {/each}
-      </select>
-      -->
-    </div>
   </div>
 
   <!-- GAIN -->

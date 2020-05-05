@@ -145,7 +145,7 @@
     width: 100%;
     height: 100%;
     display: grid;
-    grid-template-columns: auto 1fr auto auto;
+    grid-template-columns: 140px 1fr auto auto;
     /*grid-row-gap: 1px;
     grid-column-gap: 1px;*/
     background-color: #333;
