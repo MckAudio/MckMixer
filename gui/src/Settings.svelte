@@ -122,6 +122,15 @@
       Handler={_v => SendValue('gain', LogToDb(_v))} />
   </div>
 
+  <!-- RECORDING -->
+  <div class="control">
+    <i>Recording:</i>
+    <div class="splitter">
+    <Button Handler={()=>{SendMsg("command","recording","start")}}>Start</Button>
+    <Button Handler={()=>{SendMsg("command","recording","stop")}}>Stop</Button>
+    </div>
+  </div>
+
   <!-- CLOSE -->
   <div class="control">
     <i>Controls:</i>

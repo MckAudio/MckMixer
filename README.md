@@ -25,6 +25,10 @@
   - [X] Bind JACK ports to channel buffer
   - [ ] Save & load presets on the fly
   - [ ] Backup folder for presets / config
+- [ ] Metering
+  - [ ] Pre/Post Meters for Inputs
+  - [ ] Master Meter for Outputs
+  - [ ] Oscillograph view for output / maybe input also?
 
 
 ## Building

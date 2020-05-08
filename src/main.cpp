@@ -162,6 +162,12 @@ void WsHandler(us_listen_socket_t **socket)
                     if (msg.data == "close") {
                         SignalHandler(15);
                     }
+                } else if (msg.section == "recording") {
+                    if (msg.data == "start") {
+                        m_mixer.StartRecording();
+                    } else if (msg.data == "stop") {
+                        m_mixer.StopRecording();
+                    }
                 } else if (msg.section == "channel") {
                 json j = json::parse(msg.data);
                 mck::ChannelCommand cc;

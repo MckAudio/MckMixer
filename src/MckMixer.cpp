@@ -100,6 +100,9 @@ bool mck::Mixer::Init(std::string path)
     // Delay
     m_delay.Init(m_sampleRate, m_bufferSize);
 
+    // Recorder
+    m_recorder.Init(m_sampleRate, m_bufferSize);
+
     // Read Configuration
     mck::Config newConfig;
     bool createFile = LoadConfig(newConfig, path) == false;
@@ -690,6 +693,8 @@ void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
         m_bufferOut[1][s] += m_config[m_activeConfig].gainLin * m_config[m_activeConfig].delay.gainLin * m_delayBuffer[1][s];
     }
 
+    m_recorder.ProcessAudio(m_bufferOut[0], m_bufferOut[1], nframes);
+
     switch (phase)
     {
     case PROC_UPDATING:
@@ -711,6 +716,37 @@ void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
     default:
         break;
     }
+}
+
+void mck::Mixer::StartRecording()
+{
+    fs::path recPath = m_path.parent_path();
+    recPath.append("recordings");
+    if (fs::exists(recPath) == false) {
+        fs::create_directories(recPath);
+    }
+
+    // Get current date
+    time_t now = time(0);
+    tm *ltm = localtime(&now);
+    
+    const char *fmt = "rec_%.4i_%.2i_%.2i_-_%.2i:%.2i:%.2i.wav";
+    int sz = std::snprintf(nullptr, 0, fmt, 1900 + ltm->tm_year, 1 + ltm->tm_mon, ltm->tm_mday, ltm->tm_hour, ltm->tm_min, ltm->tm_sec);
+    char *out = (char *)malloc((sz + 1) * sizeof(char));
+    std::snprintf(out, sz + 1, fmt, 1900 + ltm->tm_year, 1 + ltm->tm_mon, ltm->tm_mday, ltm->tm_hour, ltm->tm_min, ltm->tm_sec);
+
+    recPath.append(out);
+
+    if (m_recorder.Start(recPath.string())) {
+        std::printf("Recording to file %s was started!\n", recPath.c_str());
+    }
+}
+
+void mck::Mixer::StopRecording()
+{
+    if (m_recorder.Stop()) {
+        std::printf("Recording was stopped.\n");
+        }
 }
 
 void mck::Mixer::ProcessReverb(jack_nframes_t nframes, float rt60, unsigned type)

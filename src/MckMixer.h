@@ -2,6 +2,7 @@
 
 #include "MckTypes.h"
 #include "MckDelay.h"
+#include "MckRecorder.h"
 #include "DspHelper.h"
 #include "JackHelper.h"
 
@@ -18,6 +19,7 @@
 #include <fstream>
 #include <string>
 #include <stdio.h>
+#include <ctime>
 
 // Threading
 #include <atomic>
@@ -80,7 +82,8 @@ public:
 
     void ProcessAudio(jack_nframes_t nframes);
 
-    
+    void StartRecording();
+    void StopRecording();
 
 private:
     bool m_isInitialized;
@@ -113,6 +116,7 @@ private:
 
     fv3::revbase_f **m_reverb;
     mck::DelayDsp m_delay;
+    mck::Recorder m_recorder;
 
     // Threading
     std::mutex m_updateMutex;
