@@ -1,6 +1,7 @@
 <script>
   export let Handler = undefined;
   export let value = undefined;
+  export let disabled = false;
 </script>
 
 <style>
@@ -24,12 +25,17 @@
     background-color: #666;
     color: #f9f9f9;
   }
+  .main.disabled {
+    cursor: not-allowed;
+    background-color: #999;
+    color: #555;
+  }
 </style>
 
 <div
-  class="main {value ? 'active' : ''}"
+  class="main {value ? 'active' : ''} {disabled ? 'disabled' : ''}"
   on:click={() => {
-    if (Handler) {
+    if (Handler && disabled == false) {
       Handler();
     }
   }}>

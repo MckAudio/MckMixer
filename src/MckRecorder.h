@@ -9,6 +9,8 @@
 #include <mutex>
 #include <condition_variable>
 
+#include "MckTypes.h"
+
 namespace mck {
     #define RECORDER_BUFFER_LEN_S 5
 
@@ -20,6 +22,7 @@ namespace mck {
         bool Start(std::string filePath);
         bool Stop();
         bool ProcessAudio(float *inputLeft, float *inputRight, unsigned nframes);
+        bool GetState(mck::Recording &r);
 
         private:
 
@@ -36,6 +39,7 @@ namespace mck {
         unsigned m_activeSamples[2];
         unsigned m_bufferLen;
         unsigned m_nBuffers;
+        std::atomic<long> m_recordedBuffers;
 
         // Output File
         unsigned m_totalLen;
@@ -45,6 +49,7 @@ namespace mck {
         // Synchronization
         std::atomic<bool> m_isRecording;
         std::atomic<bool> m_isWriting;
+        std::atomic<bool> m_isClosing;
         std::thread *m_writerThread;
         std::condition_variable m_writerCond;
         std::condition_variable m_stopCond;

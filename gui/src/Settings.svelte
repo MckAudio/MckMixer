@@ -2,9 +2,11 @@
   import SliderLabel from "./SliderLabel.svelte";
   import Select from "./Select.svelte";
   import Button from "./Button.svelte";
+  import Meter from "./Meter.svelte";
   import { DbToLog, LogToDb, FormatCon } from "./Tools.svelte";
 
   export let data = undefined;
+  export let rtData = undefined;
   export let SendValue = undefined;
   export let SendMsg = undefined;
   export let targets = [];
@@ -94,24 +96,34 @@
   <!-- TARGET -->
   <div class="control">
     <i>Left Output Target:</i>
-      <Select
-        items={targets}
-        value={data.targetLeft}
-        numeric={false}
-        Opener={() => SendMsg('request', 'target', '')}
-        Handler={_v => ConnectMaster(_v, false)}
-        Formatter={FormatCon} />
-</div>
-<div class="control">
-  <i>Right Output Target:</i>
-      <Select
-        items={targets}
-        value={data.targetRight}
-        numeric={false}
-        Opener={() => SendMsg('request', 'target', '')}
-        Handler={_v => ConnectMaster(_v, true)}
-        Formatter={FormatCon} />
+    <Select
+      items={targets}
+      value={data.targetLeft}
+      numeric={false}
+      Opener={() => SendMsg('request', 'target', '')}
+      Handler={_v => ConnectMaster(_v, false)}
+      Formatter={FormatCon} />
   </div>
+  <div class="control">
+    <i>Right Output Target:</i>
+    <Select
+      items={targets}
+      value={data.targetRight}
+      numeric={false}
+      Opener={() => SendMsg('request', 'target', '')}
+      Handler={_v => ConnectMaster(_v, true)}
+      Formatter={FormatCon} />
+  </div>
+
+  <!-- METER -->
+  {#if rtData}
+    {#if rtData.hasOwnProperty('meterOut')}
+      <div class="control">
+        <i>Meter:</i>
+        <Meter stereo={true} value={rtData.meterOut} />
+      </div>
+    {/if}
+  {/if}
 
   <!-- GAIN -->
   <div class="control">
@@ -123,17 +135,61 @@
   </div>
 
   <!-- RECORDING -->
-  <div class="control">
-    <i>Recording:</i>
-    <div class="splitter">
-    <Button Handler={()=>{SendMsg("command","recording","start")}}>Start</Button>
-    <Button Handler={()=>{SendMsg("command","recording","stop")}}>Stop</Button>
-    </div>
-  </div>
+  {#if rtData}
+    {#if rtData.hasOwnProperty('rec')}
+      <div class="control">
+        <i>Recording:</i>
+        <div class="splitter">
+          <Button
+            disabled={rtData.rec.isActive}
+            Handler={() => {
+              SendMsg('command', 'recording', 'start');
+            }}>
+            Start
+          </Button>
+          <Button
+            disabled={!rtData.rec.isActive}
+            Handler={() => {
+              SendMsg('command', 'recording', 'stop');
+            }}>
+            Stop
+          </Button>
+        </div>
+      </div>
+      {#if rtData.rec.isActive}
+        <div class="control">
+          <i>Recorded Time:</i>
+          <span>
+            {`${rtData.rec.recHours
+              .toString()
+              .padStart(
+                2,
+                '0'
+              )}:${rtData.rec.recMins
+              .toString()
+              .padStart(
+                2,
+                '0'
+              )}:${rtData.rec.recSecs
+              .toString()
+              .padStart(
+                2,
+                '0'
+              )}.${rtData.rec.recMiSecs.toString().padStart(3, '0')}`}
+          </span>
+        </div>
+      {/if}
+    {/if}
+  {/if}
 
   <!-- CLOSE -->
   <div class="control">
     <i>Controls:</i>
-    <Button Handler={()=>{SendMsg("command","system","close")}}>Close</Button>
+    <Button
+      Handler={() => {
+        SendMsg('command', 'system', 'close');
+      }}>
+      Close
+    </Button>
   </div>
 </div>

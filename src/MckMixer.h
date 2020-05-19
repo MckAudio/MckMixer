@@ -58,6 +58,8 @@ struct InputDsp
 {
     jack_port_t *port[2];
     jack_default_audio_sample_t *buffer[2];
+    double meter[2];
+    double meterLin[2];
     bool isStereo;
     InputDsp() : isStereo() {}
 };
@@ -85,6 +87,8 @@ public:
     void StartRecording();
     void StopRecording();
 
+    void GetRealTimeData(mck::RealTimeData &r);
+
 private:
     bool m_isInitialized;
     jack_nframes_t m_bufferSize;
@@ -100,6 +104,8 @@ private:
     std::atomic<bool> m_isProcessing;
     std::atomic<char> m_phase; // One of enum processing phase
 
+    double m_meterCoeff;
+
     // JACK
     jack_client_t *m_client;
     jack_port_t *m_audioOut[2];
@@ -112,6 +118,8 @@ private:
     jack_default_audio_sample_t *m_bufferOut[2];
     jack_default_audio_sample_t *m_reverbBuffer[2];
     jack_default_audio_sample_t *m_delayBuffer[2];
+    double m_meterOutLin[2];
+    double m_meterOut[2];
     InputDsp *m_inputDsp;
 
     fv3::revbase_f **m_reverb;

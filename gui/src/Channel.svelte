@@ -3,6 +3,7 @@
   import Slider from "./Slider.svelte";
   import Select from "./Select.svelte";
   import Button from "./Button.svelte";
+  import Meter from "./Meter.svelte";
   import InputText from "./InputText.svelte";
   import { DbToLog, LogToDb, FormatPan, FormatCon } from "./Tools.svelte";
 
@@ -11,6 +12,7 @@
   export let SendMsg = undefined;
   export let index = 0;
   export let sources = [];
+  export let meter = undefined;
 
   function RemoveChannel() {
     let _data = JSON.stringify({
@@ -100,6 +102,12 @@
 <div class="base">
   <i>{index + 1}</i>
   <InputText value={data.name} Handler={_v=>SendValue('name', _v)}/>
+  {#if meter != undefined}
+    <div class="control">
+      <i>Meter:</i>
+      <Meter value={meter} stereo={data.isStereo}/>
+    </div>
+  {/if}
   <div class="control">
     <i>Type:</i>
     <div class="splitter">

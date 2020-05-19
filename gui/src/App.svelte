@@ -7,9 +7,7 @@
   import Channel from "./Channel.svelte";
   import ReverbSend from "./ReverbSend.svelte";
   import DelaySend from "./DelaySend.svelte";
-
-  export let name;
-
+  
   let port = 9001;
   let socket = undefined;
   let socketConnected = false;
@@ -20,6 +18,7 @@
   let targets = [];
 
   let revTypes = ["STREV", "PROG2", "ZREV2", "NREVB"];
+  let rtData = {};
 
   function SendValue(_idx, _section, _type, _val) {
     let _data = JSON.parse(JSON.stringify(data));
@@ -65,12 +64,16 @@
         let _targets = JSON.parse(_tmp.data);
         targets = _targets;
       }
+    } else if (_tmp.msgType == "realtime") {
+      if (_tmp.section == "system") {
+        rtData = JSON.parse(_tmp.data);
+      }
     }
   }
 
   function RecvPing() {
     window.clearTimeout(pingId);
-    pingId = window.setTimeout(SendPing, 1000);
+    pingId = window.setTimeout(SendPing, 50);
   }
 
   function SendMsg(_msgType, _section, _data) {
@@ -199,7 +202,7 @@
 <div class="base">
   {#if data != undefined}
     <div class="settings">
-      <Settings {data} SendValue={(t,v) => SendValue(0, 'master', t, v)} {SendMsg} {targets}/>
+      <Settings {rtData} {data} SendValue={(t,v) => SendValue(0, 'master', t, v)} {SendMsg} {targets}/>
     </div>
     <div class="channels">
       {#each data.channels as chan, i}
@@ -208,6 +211,7 @@
           data={chan}
           {SendMsg}
           {sources}
+          meter={rtData.hasOwnProperty("meterIn") ? rtData.meterIn[i] : undefined}
           SendValue={(t, v) => SendValue(i, 'channels', t, v)} />
       {/each}
     </div>

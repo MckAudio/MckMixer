@@ -46,6 +46,50 @@ void mck::from_json(const nlohmann::json &j, ConnectionCommand &c)
     c.target = j.at("target").get<std::string>();
 }
 
+// RECORDING
+void mck::to_json(nlohmann::json &j, const Recording &r)
+{
+    j["isActive"] = r.isActive;
+    j["recTime"] = r.recTime;
+    j["recHours"] = r.recHours;
+    j["recMins"] = r.recMins;
+    j["recSecs"] = r.recSecs;
+    j["recMiSecs"] = r.recMiSecs;
+}
+void mck::from_json(const nlohmann::json &j, Recording &r)
+{
+    r.isActive = j.at("isActive").get<bool>();
+    r.recTime = j.at("recTime").get<std::string>();
+    r.recHours = j.at("recHours").get<unsigned>();
+    r.recMins = j.at("recMins").get<unsigned>();
+    r.recSecs = j.at("recSecs").get<unsigned>();
+    r.recMiSecs = j.at("recMiSecs").get<unsigned>();
+}
+// METER ITEM
+void mck::to_json(nlohmann::json &j, const MeterItem &m)
+{
+    j["l"] = m.l;
+    j["r"] = m.r;
+}
+void mck::from_json(const nlohmann::json &j, MeterItem &m)
+{
+    m.l = j.at("l").get<double>();
+    m.r = j.at("r").get<double>();
+}
+// REAL TIME DATA
+void mck::to_json(nlohmann::json &j, const RealTimeData &r)
+{
+    j["rec"] = r.rec;
+    j["meterIn"] = r.meterIn;
+    j["meterOut"] = r.meterOut;
+}
+void mck::from_json(const nlohmann::json &j, RealTimeData &r)
+{
+    r.rec = j.at("rec").get<Recording>();
+    r.meterIn = j.at("meterIn").get<std::vector<MeterItem>>();
+    r.meterOut = j.at("meterOut").get<MeterItem>();
+}
+
 // CHANNEL
 void mck::to_json(nlohmann::json &j, const Channel &c)
 {
@@ -68,6 +112,24 @@ void mck::from_json(const nlohmann::json &j, Channel &c)
     c.sendDelay = j.at("sendDelay").get<double>();
     c.sourceLeft = j.at("sourceLeft").get<std::string>();
     c.sourceRight = j.at("sourceRight").get<std::string>();
+}
+
+// PLAYER CHANNEL
+void mck::to_json(nlohmann::json &j, const PlayerChannel &c)
+{
+    j["playlist"] = c.playlist;
+    j["gain"] = c.gain;
+    j["pan"] = c.pan;
+    j["sendReverb"] = c.sendReverb;
+    j["sendDelay"] = c.sendDelay;
+}
+void mck::from_json(const nlohmann::json &j, PlayerChannel &c)
+{
+    c.playlist = j.at("playlist").get<std::vector<std::string>>();
+    c.gain = j.at("gain").get<double>();
+    c.pan = j.at("pan").get<double>();
+    c.sendReverb = j.at("sendReverb").get<double>();
+    c.sendDelay = j.at("sendDelay").get<double>();
 }
 
 // REVERB
@@ -104,6 +166,7 @@ void mck::to_json(nlohmann::json &j, const Config &c)
     j["gain"] = c.gain;
     j["targetLeft"] = c.targetLeft;
     j["targetRight"] = c.targetRight;
+    j["player"] = c.player;
     j["reverb"] = c.reverb;
     j["delay"] = c.delay;
 }
@@ -116,4 +179,9 @@ void mck::from_json(const nlohmann::json &j, Config &c)
     c.targetRight = j.at("targetRight").get<std::vector<std::string>>();
     c.reverb = j.at("reverb").get<Reverb>();
     c.delay = j.at("delay").get<Delay>();
+    try {
+        c.player = j.at("player").get<PlayerChannel>();
+    } catch (std::exception &e) {
+        c.player = PlayerChannel();
+    }
 }

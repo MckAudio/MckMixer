@@ -1,7 +1,7 @@
 #include "MckRecorder.h"
 
 mck::Recorder::Recorder()
-    : m_isInitialized(false), m_isRecording(false), m_isWriting(false), m_bufferSize(0), m_sampleRate(0), m_activeBuffer(0), m_bufferLen(0), m_nBuffers(0), m_totalLen(0), m_filePath("")
+    : m_isInitialized(false), m_isRecording(false), m_isWriting(false), m_bufferSize(0), m_sampleRate(0), m_activeBuffer(0), m_bufferLen(0), m_nBuffers(0), m_totalLen(0), m_filePath(""), m_recordedBuffers(0), m_isClosing(false)
 {
     m_activeSamples[0] = 0;
     m_activeSamples[1] = 0;
@@ -15,6 +15,9 @@ mck::Recorder::~Recorder()
         if (m_isRecording.load()) {
             Stop();
         }
+        m_isClosing = true;
+        m_writerCond.notify_all();
+
         free(m_buffer[0]);
         free(m_buffer[1]);
         m_isInitialized = false;
@@ -59,6 +62,8 @@ bool mck::Recorder::Start(std::string filePath)
     m_activeSamples[1] = 0;
     m_activeBuffer = 0;
     m_totalLen = 0;
+    m_recordedBuffers = 0;
+
 
     SF_INFO sndInfo;
     sndInfo.channels = 2;
@@ -117,6 +122,8 @@ bool mck::Recorder::ProcessAudio(float *inputLeft, float *inputRight, unsigned n
 
         m_activeSamples[m_activeBuffer] += m_bufferSize;
 
+        m_recordedBuffers.fetch_add(1);
+
         if (m_activeSamples[m_activeBuffer] >= m_bufferLen)
         {
             m_activeBuffer = 1 - m_activeBuffer;
@@ -131,12 +138,40 @@ bool mck::Recorder::ProcessAudio(float *inputLeft, float *inputRight, unsigned n
     return true;
 }
 
+bool mck::Recorder::GetState(mck::Recording &r)
+{
+    if (m_isInitialized == false) {
+        return false;
+    }
+
+    r.isActive = m_isRecording.load();
+    if (r.isActive) {
+        long m_nBuffers = m_recordedBuffers.load();
+        long ms = (long)std::round((double)m_nBuffers * (double)m_bufferSize / (double)m_sampleRate * 1000.0);
+        r.recMiSecs = ms % 1000;
+        r.recSecs = (ms / 1000) % 60;
+        r.recMins = (ms / (1000 * 60)) % 60;
+        r.recHours = (ms / (1000 * 60 * 60));
+        /*
+       long secs = m_nBuffers * m_bufferSize / m_sampleRate;
+       r.recSecs = secs % 60;
+       r.recMins = (secs / 60) % 60;
+       r.recHours = (secs / (60 & 60));
+       */
+    }
+
+    return true;
+}
+
 void mck::Recorder::WriterThread() {
     std::mutex mu;
 
     while(true) {
         std::unique_lock<std::mutex> lck(mu);
         while(true) {
+            if (m_isClosing.load()) {
+                return;
+            }
             if (m_isWriting.load()) {
                 break;
             }

@@ -18,6 +18,11 @@
 // Dsp Modules
 #include "MckMixer.h"
 
+// Threading
+#include <thread>
+#include <atomic>
+#include <time.h>
+
 namespace fs = std::filesystem;
 using namespace nlohmann;
 
@@ -30,16 +35,22 @@ struct PerSocketData
 mck::Mixer m_mixer;
 uWS::App m_ws;
 us_listen_socket_t *m_listenSocket;
+std::atomic<bool> m_isClosing = false;
+std::thread *m_rtThread;
+mck::RealTimeData m_rtData;
 
 static void SignalHandler(int sig)
 {
     fprintf(stdout, "Signal %d received, exiting...\n", sig);
+    m_isClosing = true;
+
     /*
     if (m_listenSocket != nullptr) {
         us_listen_socket_close(0, m_listenSocket);
     }
     */
     m_mixer.Close();
+    //m_rtThread->join();
 
     exit(0);
 }
@@ -136,6 +147,17 @@ void WsHandler(us_listen_socket_t **socket)
                 mck::Message outMsg("system", "pong");
                 json jOut = outMsg;
                 ws->send(jOut.dump(), uWS::OpCode::TEXT);
+
+                
+            // Get Realtime Data
+            m_mixer.GetRealTimeData(m_rtData);
+
+            mck::Message rtMsg("system", "realtime");
+            json jRt = m_rtData;
+            rtMsg.data = jRt.dump();
+            jOut = rtMsg;
+            ws->send(jOut.dump(), uWS::OpCode::TEXT);
+            
             } else if (msg.msgType == "partial" && msg.section == "config")
             {
                 mck::Config _config;
@@ -247,6 +269,34 @@ void WsHandler(us_listen_socket_t **socket)
         .run();
 }
 
+void RealTimeThread(us_listen_socket_t **socket)
+{
+    timespec ts;
+    ts.tv_nsec = 10 * 1000 * 1000;
+    unsigned count = 0;
+
+    while (true)
+    {
+        if (m_isClosing.load())
+        {
+            return;
+        }
+
+        if (count >= 30)
+        {
+            count = 0;
+
+            // Get Realtime Data
+            mck::RealTimeData rtData;
+            m_mixer.GetRealTimeData(rtData);
+        }
+
+        // Sleep for 10 ms
+        nanosleep(&ts, &ts);
+        count += 1;
+    }
+}
+
 int main(int argc, char **argv)
 {
     struct passwd *pw = getpwuid(getuid());
@@ -268,9 +318,11 @@ int main(int argc, char **argv)
     signal(SIGHUP, SignalHandler);
     signal(SIGINT, SignalHandler);
 
+    //m_rtThread = new std::thread(RealTimeThread, &m_listenSocket);
+
     WsHandler(&m_listenSocket);
-
+    m_isClosing = true;
     m_mixer.Close();
-
+    //m_rtThread->join();
     return 0;
 }

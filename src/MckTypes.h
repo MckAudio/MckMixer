@@ -36,6 +36,35 @@ namespace mck {
     void to_json(nlohmann::json &j, const ConnectionCommand &c);
     void from_json(const nlohmann::json &j, ConnectionCommand &c);
 
+    struct Recording {
+        bool isActive;
+        std::string recTime;
+        unsigned recHours;
+        unsigned recMins;
+        unsigned recSecs;
+        unsigned recMiSecs;
+        Recording() : isActive(), recTime(""), recHours(0), recMins(0), recSecs(0), recMiSecs(0) {}
+    };
+    void to_json(nlohmann::json &j, const Recording &r);
+    void from_json(const nlohmann::json &j, Recording &r);
+
+    struct MeterItem {
+        double l;
+        double r;
+        MeterItem() : l(0.0), r(0.0) {} 
+    };
+    void to_json(nlohmann::json &j, const MeterItem &m);
+    void from_json(const nlohmann::json &j, MeterItem &m);
+
+    struct RealTimeData {
+        Recording rec;
+        std::vector<MeterItem> meterIn;
+        MeterItem meterOut;
+        RealTimeData() : rec(), meterIn(), meterOut() {}
+    };
+    void to_json(nlohmann::json &j, const RealTimeData &r);
+    void from_json(const nlohmann::json &j, RealTimeData &r);
+
     struct Channel {
         std::string name;
         bool isStereo;
@@ -53,6 +82,21 @@ namespace mck {
     };
     void to_json(nlohmann::json &j, const Channel &c);
     void from_json(const nlohmann::json &j, Channel &c);
+
+    struct PlayerChannel {
+        std::vector<std::string> playlist;
+        double gain;
+        double gainLin;
+        double pan;
+        double sendReverb;
+        double sendReverbLin;
+        double sendDelay;
+        double sendDelayLin;
+        PlayerChannel() : playlist(), gain(-200.0), gainLin(0.0), pan(50.0), sendReverb(-200.0), sendReverbLin(0.0), sendDelay(-200.0), sendDelayLin(0.0) {
+        }
+    };
+    void to_json(nlohmann::json &j, const PlayerChannel &c);
+    void from_json(const nlohmann::json &j, PlayerChannel &c);
 
     struct Reverb {
         double rt60;
@@ -83,9 +127,10 @@ namespace mck {
         std::vector<std::string> targetRight;
         std::vector<Channel> channels;
         unsigned channelCount;
+        PlayerChannel player;
         Reverb reverb;
         Delay delay;
-        Config() : gain(0.0), gainLin(1.0), targetLeft(), targetRight(), channels(), channelCount(0), reverb(), delay() {};
+        Config() : gain(0.0), gainLin(1.0), targetLeft(), targetRight(), channels(), channelCount(0), player(), reverb(), delay() {};
     };
     void to_json(nlohmann::json &j, const Config &c);
     void from_json(const nlohmann::json &j, Config &c);
