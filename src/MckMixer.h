@@ -5,6 +5,9 @@
 #include "MckRecorder.h"
 #include "DspHelper.h"
 #include "JackHelper.h"
+#include "Metronome.h"
+#include "MckLooper.h"
+#include "MckTransport.h"
 
 // Audio
 #include <freeverb/strev.hpp>
@@ -61,6 +64,7 @@ struct InputDsp
     double meter[2];
     double meterLin[2];
     bool isStereo;
+    Looper looper;
     InputDsp() : isStereo() {}
 };
 
@@ -79,8 +83,10 @@ public:
     bool AddChannel(bool isStereo, mck::Config &outConfig);
     bool RemoveChannel(unsigned idx, mck::Config &outConfig);
 
-    // Connection Commands
-    bool ApplyConnectionCommand(mck::ConnectionCommand cmd, mck::Config &outConfig);
+    // Commands
+    bool ApplyCommand(mck::ConnectionCommand cmd, mck::Config &outConfig);
+    bool ApplyCommand(mck::LoopCommand &cmd);
+    bool ApplyCommand(mck::TransportCommand &cmd);
 
     void ProcessAudio(jack_nframes_t nframes);
 
@@ -110,6 +116,10 @@ private:
     jack_client_t *m_client;
     jack_port_t *m_audioOut[2];
     //jack_port_t **m_audioIn;
+    // MIDI
+    jack_port_t *m_midiClkIn;
+    jack_port_t *m_midiClkOut;
+    jack_port_t *m_midiCtrlIn;
 
     // DSP
     double *m_interpolSqrt;
@@ -125,6 +135,8 @@ private:
     fv3::revbase_f **m_reverb;
     mck::DelayDsp m_delay;
     mck::Recorder m_recorder;
+    mck::Metronome m_metro;
+    mck::Transport m_trans;
 
     // Threading
     std::mutex m_updateMutex;

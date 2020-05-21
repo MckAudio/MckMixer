@@ -46,6 +46,43 @@ void mck::from_json(const nlohmann::json &j, ConnectionCommand &c)
     c.target = j.at("target").get<std::string>();
 }
 
+// TRANSPORT COMMAND
+void mck::to_json(nlohmann::json &j, const TransportCommand &t) {
+    j["mode"] = t.mode;
+    j["tempo"] = t.tempo;
+}
+void mck::from_json(const nlohmann::json &j, TransportCommand &t) {
+    t.mode = j.at("mode").get<char>();
+    t.tempo = j.at("tempo").get<double>();
+}
+// TRANSPORT STATE
+void mck::to_json(nlohmann::json &j, const TransportState &t) {
+    j["state"] = t.state;
+    j["tempo"] = t.tempo;
+    j["pulseIdx"] = t.pulseIdx;
+    j["pulse"] = t.pulse;
+    j["nPulses"] = t.nPulses;
+    j["pulseLen"] = t.pulseLen;
+    j["beat"] = t.beat;
+    j["nBeats"] = t.nBeats;
+    j["beatLen"] = t.beatLen;
+    j["bar"] = t.bar;
+    j["barLen"] = t.barLen;
+}
+void mck::from_json(const nlohmann::json &j, TransportState &t) {
+    t.state = j.at("state").get<char>();
+    t.tempo = j.at("tempo").get<double>();
+    t.pulseIdx = j.at("pulseIdx").get<unsigned>();
+    t.pulse = j.at("pulse").get<unsigned>();
+    t.nPulses = j.at("nPulses").get<unsigned>();
+    t.pulseLen = j.at("pulseLen").get<unsigned>();
+    t.beat = j.at("beat").get<unsigned>();
+    t.nBeats = j.at("nBeats").get<unsigned>();
+    t.beatLen = j.at("beatLen").get<unsigned>();
+    t.bar = j.at("bar").get<unsigned>();
+    t.barLen = j.at("barLen").get<unsigned>();
+}
+
 // RECORDING
 void mck::to_json(nlohmann::json &j, const Recording &r)
 {
@@ -76,18 +113,82 @@ void mck::from_json(const nlohmann::json &j, MeterItem &m)
     m.l = j.at("l").get<double>();
     m.r = j.at("r").get<double>();
 }
+// TEMPO
+void mck::to_json(nlohmann::json &j, const TempoData &t)
+{
+    j["bpm"] = t.bpm;
+    j["sync"] = t.sync;
+    j["bar"] = t.bar;
+    j["beat"] = t.beat;
+}
+void mck::from_json(const nlohmann::json &j, TempoData &t)
+{
+    t.bpm = j.at("bpm").get<double>();
+    t.sync = j.at("sync").get<bool>();
+    t.bar = j.at("bar").get<unsigned>();
+    t.beat = j.at("beat").get<unsigned>();
+}
+
+// LOOP
+void mck::to_json(nlohmann::json &j, const Loop &l)
+{
+    j["name"] = l.name;
+    j["isRecorded"] = l.isRecorded;
+    j["isStereo"] = l.isStereo;
+    j["numBars"] = l.numBars;
+}
+void mck::from_json(const nlohmann::json &j, Loop &l)
+{
+    l.name = j.at("name").get<std::string>();
+    l.isRecorded = j.at("isRecorded").get<bool>();
+    l.isStereo = j.at("isStereo").get<bool>();
+    l.numBars = j.at("numBars").get<unsigned>();
+}
+// LOOP COMMAND
+void mck::to_json(nlohmann::json &j, const LoopCommand &l)
+{
+    j["chanIdx"] = l.chanIdx;
+    j["loopIdx"] = l.loopIdx;
+    j["mode"] = l.mode;
+}
+void mck::from_json(const nlohmann::json &j, LoopCommand &l)
+{
+    l.chanIdx = j.at("chanIdx").get<unsigned>();
+    l.loopIdx = j.at("loopIdx").get<unsigned>();
+    l.mode = j.at("mode").get<char>();
+}
+// LOOP STATE
+void mck::to_json(nlohmann::json &j, const LoopState &l) {
+    j["state"] = l.state;
+    j["pos"] = l.pos;
+    j["len"] = l.len;
+    j["idx"] = l.idx;
+}
+void mck::from_json(const nlohmann::json &j, LoopState &l) {
+    l.state = j.at("state").get<char>();
+    l.pos = j.at("pos").get<double>();
+    l.len = j.at("len").get<double>();
+    l.idx = j.at("idx").get<unsigned>();
+}
+
 // REAL TIME DATA
 void mck::to_json(nlohmann::json &j, const RealTimeData &r)
 {
+    j["trans"] = r.trans;
+    j["tempo"] = r.tempo;
     j["rec"] = r.rec;
     j["meterIn"] = r.meterIn;
     j["meterOut"] = r.meterOut;
+    j["looper"] = r.looper;
 }
 void mck::from_json(const nlohmann::json &j, RealTimeData &r)
 {
+    r.trans = j.at("trans").get<TransportState>();
+    r.tempo = j.at("tempo").get<TempoData>();
     r.rec = j.at("rec").get<Recording>();
     r.meterIn = j.at("meterIn").get<std::vector<MeterItem>>();
     r.meterOut = j.at("meterOut").get<MeterItem>();
+    r.looper = j.at("looper").get<std::vector<LoopState>>();
 }
 
 // CHANNEL
@@ -101,6 +202,8 @@ void mck::to_json(nlohmann::json &j, const Channel &c)
     j["sendDelay"] = c.sendDelay;
     j["sourceLeft"] = c.sourceLeft;
     j["sourceRight"] = c.sourceRight;
+    j["loops"] = c.loops;
+    j["numLoops"] = c.numLoops;
 }
 void mck::from_json(const nlohmann::json &j, Channel &c)
 {
@@ -112,6 +215,13 @@ void mck::from_json(const nlohmann::json &j, Channel &c)
     c.sendDelay = j.at("sendDelay").get<double>();
     c.sourceLeft = j.at("sourceLeft").get<std::string>();
     c.sourceRight = j.at("sourceRight").get<std::string>();
+    try {
+        c.loops = j.at("loops").get<std::vector<Loop>>();
+        c.numLoops = j.at("numLoops").get<unsigned>();
+    } catch (std::exception &e) {
+        c.loops = std::vector<Loop>();
+        c.numLoops = 0;
+    }
 }
 
 // PLAYER CHANNEL
@@ -164,6 +274,9 @@ void mck::to_json(nlohmann::json &j, const Config &c)
     j["channels"] = c.channels;
     j["channelCount"] = c.channelCount;
     j["gain"] = c.gain;
+    j["clockSource"] = c.clockSource;
+    j["clockTarget"] = c.clockTarget;
+    j["controlSource"] = c.controlSource;
     j["targetLeft"] = c.targetLeft;
     j["targetRight"] = c.targetRight;
     j["player"] = c.player;
@@ -175,6 +288,21 @@ void mck::from_json(const nlohmann::json &j, Config &c)
     c.channels = j.at("channels").get<std::vector<Channel>>();
     c.channelCount = j.at("channelCount").get<unsigned>();
     c.gain = j.at("gain").get<double>();
+    try {
+        c.clockSource = j.at("clockSource").get<std::vector<std::string>>();
+    } catch (std::exception &e) {
+        c.clockSource = std::vector<std::string>();
+    }
+    try {
+        c.clockTarget = j.at("clockTarget").get<std::vector<std::string>>();
+    } catch (std::exception &e) {
+        c.clockTarget = std::vector<std::string>();
+    }
+    try {
+        c.controlSource = j.at("controlSource").get<std::vector<std::string>>();
+    } catch (std::exception &e) {
+        c.controlSource = std::vector<std::string>();
+    }
     c.targetLeft = j.at("targetLeft").get<std::vector<std::string>>();
     c.targetRight = j.at("targetRight").get<std::vector<std::string>>();
     c.reverb = j.at("reverb").get<Reverb>();

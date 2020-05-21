@@ -7,6 +7,7 @@
   export let value = 0.0;
   export let label = "";
   export let centered = false;
+  export let disabled = false;
 
   let curValue = -1.0;
   let curWidth = 100.0;
@@ -30,6 +31,10 @@
   }
 
   function TouchHandler(_evt) {
+    if (disabled) {
+      return;
+    }
+
     console.log("[TOUCH]", _evt);
     if (_evt.type == "touchstart") {
       if (base) {
@@ -91,6 +96,9 @@
   }
 
   function MouseHandler(_evt) {
+    if (disabled) {
+      return;
+    }
     if (_evt.type == "mousedown") {
       if (base) {
         if (_evt.ctrlKey) {
@@ -170,6 +178,9 @@
     cursor: pointer;
     box-shadow: 0px 1px 2px 0px #555;
   }
+  .base.disabled {
+    cursor: not-allowed;
+  }
 
   .blend {
     position: absolute;
@@ -214,7 +225,7 @@
 </style>
 
 <div
-  class="base"
+  class="base {disabled ? 'disabled' : ''}"
   bind:clientWidth={elemWidth}
   bind:clientHeight={elemHeight}
   bind:this={base}

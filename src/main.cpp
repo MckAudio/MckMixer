@@ -219,7 +219,7 @@ void WsHandler(us_listen_socket_t **socket)
                 mck::Config config;
                 try {
                     cc = j;
-                    m_mixer.ApplyConnectionCommand(cc, config);
+                    m_mixer.ApplyCommand(cc, config);
 
                     mck::Message outMsg("config", "partial");
                     json jC = config;
@@ -229,6 +229,24 @@ void WsHandler(us_listen_socket_t **socket)
 
                 } catch (std::exception &e) {
                     std::fprintf(stderr, "Failed to read connection command: %s\n", e.what());
+                }
+            } else if (msg.section == "loop") {
+                json j = json::parse(msg.data);
+                mck::LoopCommand lc;
+                try {
+                    lc = j;
+                    m_mixer.ApplyCommand(lc);
+                } catch (std::exception &e) {
+                    std::fprintf(stderr, "Failed to read loop command: %s\n", e.what());
+                }
+            } else if (msg.section == "transport") {
+                json j = json::parse(msg.data);
+                mck::TransportCommand tc;
+                try {
+                    tc = j;
+                    m_mixer.ApplyCommand(tc);
+                } catch (std::exception &e) {
+                    std::fprintf(stderr, "Failed to read transport command: %s\n", e.what());
                 }
             } } else if (msg.msgType == "request") {
                 if (msg.section == "source") {

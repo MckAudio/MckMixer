@@ -212,6 +212,7 @@
           {SendMsg}
           {sources}
           meter={rtData.hasOwnProperty("meterIn") ? rtData.meterIn[i] : undefined}
+          looper={rtData.hasOwnProperty("looper") ? rtData.looper[i] : undefined}
           SendValue={(t, v) => SendValue(i, 'channels', t, v)} />
       {/each}
     </div>

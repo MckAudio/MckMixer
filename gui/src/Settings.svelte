@@ -11,6 +11,8 @@
   export let SendMsg = undefined;
   export let targets = [];
 
+  let tempo = 120;
+
   function AddChannel(_isStereo) {
     let _data = JSON.stringify({
       command: "add",
@@ -32,6 +34,25 @@
     });
     if (SendMsg) {
       SendMsg("command", "connection", _data);
+    }
+  }
+  function SendTransCmd(_cmd) {
+    let _data = JSON.stringify({
+      mode: _cmd,
+      tempo: 0.0
+    });
+    if (SendMsg) {
+      SendMsg("command", "transport", _data);
+    }
+  }
+  function ChangeTempo(_tempo) {
+    let _data = JSON.stringify({
+      mode: 4,
+      tempo: _tempo
+    });
+    if (SendMsg) {
+      SendMsg("command", "transport", _data);
+      tempo = _tempo;
     }
   }
 </script>
@@ -59,6 +80,12 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-column-gap: 2px;
+    column-gap: 2px;
+  }
+  .gritter {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
     column-gap: 2px;
   }
   button {
@@ -180,6 +207,31 @@
         </div>
       {/if}
     {/if}
+  {/if}
+
+  <!-- TRANSPORT -->
+  {#if rtData}
+    {#if rtData.hasOwnProperty("trans")}
+  <div class="control">
+    <i>Transport:</i>
+    <div class="gritter">
+      <Button disabled={rtData.trans.state == 1} Handler={()=>SendTransCmd(2)}>Start</Button>
+      <Button disabled={rtData.trans.state == 1} Handler={()=>SendTransCmd(3)}>Cont</Button>
+      <Button disabled={rtData.trans.state == 0} Handler={()=>SendTransCmd(1)}>Stop</Button>
+    </div>
+  </div>
+  <div class="control">
+    <i>Tempo:</i>
+    <SliderLabel
+      label={rtData.trans.tempo.toFixed(2) + ' bpm'}
+      value={(rtData.trans.tempo - 30.0)/ 270.0}
+      Handler={_v => ChangeTempo(_v * 270.0 + 30)} />
+  </div>
+  <div class="control">
+    <i>Position:</i>
+    <span>{(rtData.trans.bar + 1).toString().padStart(4, '0') + ' - ' +(rtData.trans.beat + 1).toString() + ' / ' + (rtData.trans.nBeats).toString()}</span>
+  </div>
+  {/if}
   {/if}
 
   <!-- CLOSE -->

@@ -13,6 +13,9 @@
   export let index = 0;
   export let sources = [];
   export let meter = undefined;
+  export let looper = undefined;
+
+  const state = ["Idle", "Should Play", "Playing", "Should Record", "Recording", "Should Stop", "Should Stop", "Stopped"];
 
   function RemoveChannel() {
     let _data = JSON.stringify({
@@ -38,6 +41,17 @@
       SendMsg("command", "connection", _data);
     }
   }
+
+  function SendLoopCmd(_cmd) {
+    let _data = JSON.stringify({
+      chanIdx: index,
+      loopIdx: 0,
+      mode: _cmd
+    });
+    if (SendMsg) {
+      SendMsg("command", "loop", _data);
+    }
+  }
 </script>
 
 <style>
@@ -60,6 +74,12 @@
     font-size: 14px;
   }
 
+  span {
+    text-align: center;
+    font-family: mck-lato;
+    font-size: 14;
+  }
+
   .control {
     display: grid;
     grid-template-rows: auto minmax(24px, auto);
@@ -71,6 +91,12 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-column-gap: 2px;
+    column-gap: 2px;
+  }
+  .gritter {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
     column-gap: 2px;
   }
   button {
@@ -101,11 +127,11 @@
 
 <div class="base">
   <i>{index + 1}</i>
-  <InputText value={data.name} Handler={_v=>SendValue('name', _v)}/>
+  <InputText value={data.name} Handler={_v => SendValue('name', _v)} />
   {#if meter != undefined}
     <div class="control">
       <i>Meter:</i>
-      <Meter value={meter} stereo={data.isStereo}/>
+      <Meter value={meter} stereo={data.isStereo} />
     </div>
   {/if}
   <div class="control">
@@ -146,14 +172,14 @@
     <div class="control">
       <i>Source:</i>
       <Select
-        items={["disconnect", ...sources]}
+        items={['disconnect', ...sources]}
         value={data.sourceLeft}
         numeric={false}
         Opener={() => SendMsg('request', 'source', '')}
         Handler={_v => ConnectChannel(_v, false)}
         Formatter={FormatCon} />
     </div>
-  <div class="rest" />
+    <div class="rest" />
   {/if}
   <div class="control">
     <i>Pan:</i>
@@ -190,4 +216,37 @@
     <i>Controls:</i>
     <Button Handler={() => RemoveChannel()}>Delete Channel</Button>
   </div>
+  {#if looper}
+    {#if looper.hasOwnProperty('state')}
+      <div class="control">
+        <i>Loops:</i>
+        <div class="gritter">
+          <Button disabled={looper.state != 0} Handler={() => SendLoopCmd(2)}>
+            Record
+          </Button>
+          <Button disabled={looper.state != 0} Handler={() => SendLoopCmd(1)}>
+            Play
+          </Button>
+          <Button
+            disabled={looper.state == 0 || looper.state == 5 || looper.state == 6}
+            Handler={() => SendLoopCmd(3)}>
+            Stop
+          </Button>
+        </div>
+      </div>
+      {#if looper.state == 2 || looper.state == 4}
+      <div class="control">
+        <i>Loop Position:</i>
+        <SliderLabel
+        disabled={true}
+          label={Math.round(looper.pos * 100.0) + ' %'}
+          value={looper.pos} />
+      </div>
+      {/if}
+      <div class="control">
+        <i>Loop State:</i>
+        <span>{state[looper.state]}</span>
+      </div>
+    {/if}
+  {/if}
 </div>
