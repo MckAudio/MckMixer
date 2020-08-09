@@ -16,6 +16,7 @@ mck::Mixer::Mixer()
     m_updateReady = false;
     m_isProcessing = true;
     m_phase = PROC_FADE_IN;
+    m_dataUpdate = false;
 }
 
 bool mck::Mixer::Init(std::string path)
@@ -49,9 +50,11 @@ bool mck::Mixer::Init(std::string path)
     m_audioOut[0] = jack_port_register(m_client, "audio_out_l", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
     m_audioOut[1] = jack_port_register(m_client, "audio_out_r", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
 
-    // Set MIDI Input Channels
+    // Set MIDI Channels
     m_midiClkIn = jack_port_register(m_client, "midi_clk_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
     m_midiClkOut = jack_port_register(m_client, "midi_clk_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
+    m_midiCtrlIn = jack_port_register(m_client, "midi_ctrl_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
+    m_midiCtrlOut = jack_port_register(m_client, "midi_ctrl_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
 
     m_bufferSize = jack_get_buffer_size(m_client);
     m_sampleRate = jack_get_sample_rate(m_client);
@@ -60,7 +63,7 @@ bool mck::Mixer::Init(std::string path)
     unsigned memSize = m_bufferSize * sizeof(jack_default_audio_sample_t);
     m_inputDsp = (InputDsp *)malloc(MCK_MIXER_MAX_INPUTS * sizeof(InputDsp));
     memset(m_inputDsp, 0, MCK_MIXER_MAX_INPUTS * sizeof(InputDsp));
-    
+
     // Init DSP stuff
     m_interpolLin = (double *)malloc(m_bufferSize * sizeof(double));
     m_interpolSqrt = (double *)malloc(m_bufferSize * sizeof(double));
@@ -115,7 +118,6 @@ bool mck::Mixer::Init(std::string path)
         m_inputDsp[i].looper.Init(m_sampleRate, m_bufferSize, &m_trans);
     }
 
-
     // Read Configuration
     mck::Config newConfig;
     bool createFile = LoadConfig(newConfig, path) == false;
@@ -166,6 +168,12 @@ void mck::Mixer::Close()
         cons.clear();
         mck::GetConnections(m_client, m_midiClkOut, cons);
         m_config[m_activeConfig].clockTarget = cons;
+        cons.clear();
+        mck::GetConnections(m_client, m_midiCtrlIn, cons);
+        m_config[m_activeConfig].controlSource = cons;
+        cons.clear();
+        mck::GetConnections(m_client, m_midiCtrlOut, cons);
+        m_config[m_activeConfig].controlTarget = cons;
 
         // Save Output Connections
         cons.clear();
@@ -247,6 +255,12 @@ bool mck::Mixer::SetConfig(mck::Config &config)
     config.reverb.gainLin = mck::DbToLin(config.reverb.gain);
     config.delay.gainLin = mck::DbToLin(config.delay.gain);
 
+    bool soloSet = false;
+    for (unsigned i = 0; i < config.channels.size(); i++)
+    {
+        soloSet |= config.channels[i].solo;
+    }
+
     for (unsigned i = 0; i < config.channels.size(); i++)
     {
         if (config.channels[i].isStereo)
@@ -261,6 +275,10 @@ bool mck::Mixer::SetConfig(mck::Config &config)
         config.channels[i].pan = std::min(100.0, std::max(0.0, config.channels[i].pan));
 
         config.channels[i].gainLin = mck::DbToLin(config.channels[i].gain);
+        if (config.channels[i].mute || (soloSet && !config.channels[i].solo))
+        {
+            config.channels[i].gainLin = 0.0;
+        }
         config.channels[i].sendReverbLin = mck::DbToLin(config.channels[i].sendReverb);
         config.channels[i].sendDelayLin = mck::DbToLin(config.channels[i].sendDelay);
     }
@@ -275,6 +293,14 @@ bool mck::Mixer::SetConfig(mck::Config &config)
     if (mck::NewConnections(m_client, m_midiClkOut, config.clockTarget))
     {
         mck::SetConnections(m_client, m_midiClkOut, config.clockTarget, false);
+    }
+    if (mck::NewConnections(m_client, m_midiCtrlIn, config.controlSource))
+    {
+        mck::SetConnections(m_client, m_midiCtrlIn, config.controlSource, true);
+    }
+    if (mck::NewConnections(m_client, m_midiCtrlOut, config.controlTarget))
+    {
+        mck::SetConnections(m_client, m_midiCtrlOut, config.controlTarget, false);
     }
 
     // Connect Output Channels
@@ -560,14 +586,17 @@ bool mck::Mixer::ApplyCommand(mck::ConnectionCommand cmd, mck::Config &outConfig
     return true;
 }
 
-bool mck::Mixer::ApplyCommand(mck::LoopCommand& cmd) {
-    if (cmd.chanIdx >= m_config[m_activeConfig].channelCount) {
+bool mck::Mixer::ApplyCommand(mck::LoopCommand &cmd)
+{
+    if (cmd.chanIdx >= m_config[m_activeConfig].channelCount)
+    {
         return false;
     }
     return m_inputDsp[cmd.chanIdx].looper.ApplyCommand(cmd, m_config[m_activeConfig].channels[cmd.chanIdx].isStereo);
 }
 
-bool mck::Mixer::ApplyCommand(mck::TransportCommand &cmd) {
+bool mck::Mixer::ApplyCommand(mck::TransportCommand &cmd)
+{
     return m_trans.ApplyCommand(cmd);
 }
 
@@ -593,6 +622,23 @@ void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
         return;
     }
 
+    // CONTROL
+    bool updateConfig = false;
+    ControlState ctrlState;
+    if (phase == PROC_UPDATING)
+    {
+        updateConfig = true;
+        m_control.ProcessMidi(m_midiCtrlIn, m_midiCtrlOut, nframes, m_config[m_newConfig], updateConfig, ctrlState);
+    }
+    else if (phase == PROC_NORMAL)
+    {
+        m_control.ProcessMidi(m_midiCtrlIn, m_midiCtrlOut, nframes, m_config[m_newConfig], updateConfig, ctrlState);
+        if (updateConfig)
+        {
+            // Handle new values
+            phase = PROC_UPDATING;
+        }
+    }
     // TRANSPORT
     TransportState transState;
     m_trans.Process(m_midiClkOut, nframes, transState);
@@ -607,7 +653,6 @@ void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
     bool clkSet = false;
     bool print = false;
 
-
     for (unsigned i = 0; i < eventCount; i++)
     {
         jack_midi_event_get(&event, clk_buf, i);
@@ -620,8 +665,6 @@ void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
         }
     }
     m_metro.EndProcess();
-
-
 
     memset(m_reverbBuffer[0], 0, m_bufferSize * sizeof(jack_default_audio_sample_t));
     memset(m_reverbBuffer[1], 0, m_bufferSize * sizeof(jack_default_audio_sample_t));
@@ -640,6 +683,19 @@ void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
             m_inputDsp[i].buffer[1] = (jack_default_audio_sample_t *)jack_port_get_buffer(m_inputDsp[i].port[1], nframes);
             m_inputDsp[i].meterLin[1] = (1.0 - m_meterCoeff) * m_inputDsp[i].meterLin[1] + m_meterCoeff * mck::CalcMeterLin((float *)m_inputDsp[i].buffer[1], nframes);
             m_inputDsp[i].meter[1] = mck::LinToDb(m_inputDsp[i].meterLin[1]);
+        }
+    }
+
+    // Looper
+    for (unsigned i = 0; i < m_config[m_activeConfig].channelCount; i++)
+    {
+        if (m_inputDsp[i].isStereo)
+        {
+            m_inputDsp[i].looper.ProcessStereo(m_inputDsp[i].buffer[0], m_inputDsp[i].buffer[1], transState);
+        }
+        else
+        {
+            m_inputDsp[i].looper.ProcessMono(m_inputDsp[i].buffer[0], transState);
         }
     }
 
@@ -721,13 +777,8 @@ void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
 
         if (m_config[m_activeConfig].channels[i].isStereo)
         {
-            // Looper
-            m_inputDsp[i].looper.ProcessStereo(m_inputDsp[i].buffer[0], m_inputDsp[i].buffer[1], transState);
-
-
             for (unsigned s = 0; s < nframes; s++)
             {
-                
                 // Output
                 m_bufferOut[0][s] += m_config[m_activeConfig].gainLin * panL * m_inputDsp[i].buffer[0][s];
                 m_bufferOut[1][s] += m_config[m_activeConfig].gainLin * panR * m_inputDsp[i].buffer[1][s];
@@ -743,9 +794,6 @@ void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
         }
         else
         {
-            // Looper
-            m_inputDsp[i].looper.ProcessMono(m_inputDsp[i].buffer[0], transState);
-            
             for (unsigned s = 0; s < nframes; s++)
             {
                 // Output
@@ -792,6 +840,7 @@ void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
     case PROC_UPDATING:
         m_phase = PROC_NORMAL;
         m_activeConfig = m_newConfig;
+        m_dataUpdate = true;
         break;
     case PROC_FADE_OUT:
         m_phase = PROC_BYPASS;
@@ -861,7 +910,6 @@ void mck::Mixer::GetRealTimeData(mck::RealTimeData &r)
     // Transport
     m_trans.GetRTData(r.trans);
 
-
     // Metering
     if (r.meterIn.size() != config->channelCount)
     {
@@ -887,6 +935,14 @@ void mck::Mixer::GetRealTimeData(mck::RealTimeData &r)
     }
     r.meterOut.l = m_meterOut[0];
     r.meterOut.r = m_meterOut[1];
+}
+
+bool mck::Mixer::DataWasUpdated() {
+    if (m_dataUpdate.load()) {
+        m_dataUpdate = false;
+        return true;
+    }
+    return false;
 }
 
 void mck::Mixer::ProcessReverb(jack_nframes_t nframes, float rt60, unsigned type)

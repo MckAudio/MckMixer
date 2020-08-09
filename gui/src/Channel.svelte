@@ -205,6 +205,13 @@
   </div>
   <div class="rest" />
   <div class="control">
+  <i>Mute & Solo:</i>
+    <div class="gritter">
+      <Button Handler={()=>SendValue('mute', !data.mute)} value={data.mute}>Mute</Button>
+      <Button Handler={()=>SendValue('solo', !data.solo)} value={data.solo}>Solo</Button>
+    </div>
+  </div>
+  <div class="control">
     <i>Gain:</i>
     <SliderLabel
       label={Math.round(data.gain) + ' dB'}

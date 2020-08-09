@@ -157,6 +157,18 @@ void WsHandler(us_listen_socket_t **socket)
             rtMsg.data = jRt.dump();
             jOut = rtMsg;
             ws->send(jOut.dump(), uWS::OpCode::TEXT);
+
+
+            // Data Updates
+            if (m_mixer.DataWasUpdated()) {
+                mck::Config config;
+                m_mixer.GetConfig(config);
+                mck::Message confMsg("config", "partial");
+                json jConf = config;
+                confMsg.data = jConf.dump();
+                jOut = confMsg;
+                ws->send(jOut.dump(), uWS::OpCode::TEXT);
+            }
             
             } else if (msg.msgType == "partial" && msg.section == "config")
             {

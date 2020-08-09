@@ -1,6 +1,6 @@
 [submodule "freeverb3"]
 	path = freeverb3
-	url = https://github.com/HenriCSHC/freeverb3.git
+	url = git@github.com/HenriCSHC/freeverb3.git
 [submodule "uWebSockets"]
 	path = uWebSockets
 	url = https://github.com/uNetworking/uWebSockets.git

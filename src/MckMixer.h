@@ -8,6 +8,7 @@
 #include "Metronome.h"
 #include "MckLooper.h"
 #include "MckTransport.h"
+#include "MckControl.h"
 
 // Audio
 #include <freeverb/strev.hpp>
@@ -94,6 +95,7 @@ public:
     void StopRecording();
 
     void GetRealTimeData(mck::RealTimeData &r);
+    bool DataWasUpdated();
 
 private:
     bool m_isInitialized;
@@ -109,6 +111,7 @@ private:
     std::atomic<bool> m_updateCount;
     std::atomic<bool> m_isProcessing;
     std::atomic<char> m_phase; // One of enum processing phase
+    std::atomic<bool> m_dataUpdate;
 
     double m_meterCoeff;
 
@@ -120,6 +123,7 @@ private:
     jack_port_t *m_midiClkIn;
     jack_port_t *m_midiClkOut;
     jack_port_t *m_midiCtrlIn;
+    jack_port_t *m_midiCtrlOut;
 
     // DSP
     double *m_interpolSqrt;
@@ -137,6 +141,7 @@ private:
     mck::Recorder m_recorder;
     mck::Metronome m_metro;
     mck::Transport m_trans;
+    mck::Control m_control;
 
     // Threading
     std::mutex m_updateMutex;
