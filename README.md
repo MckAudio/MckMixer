@@ -1,5 +1,37 @@
 # MckMixer
 
+
+## Building
+
+### Build dependencies
+
+```
+sudo apt install build-essentials libfftw3-dev libjack-jackd2-dev
+
+sudo ld-config
+```
+
+### Build steps
+
+```
+git clone ...
+cd MckMixer
+git submodule update --init --recursive
+
+cd freeverb3
+./autogen.sh
+./configure
+make
+sudo make install
+
+cd gui
+npm install
+# npm update
+npm run build
+
+make
+```
+
 ## Features
 
 - [X] Mixing mono and stereo channel to a stereo master bus
@@ -29,35 +61,3 @@
   - [ ] Pre/Post Meters for Inputs
   - [ ] Master Meter for Outputs
   - [ ] Oscillograph view for output / maybe input also?
-
-
-## Building
-
-### Build dependencies
-
-```
-sudo apt install libfftw3-dev libjack-jackd2-dev
-
-sudo ld-config
-```
-
-### Build steps
-
-```
-git clone ...
-cd MckMixer
-git submodule update --init --recursive
-
-cd freeverb3
-./autogen.sh
-./configure
-make
-sudo make install
-
-cd gui
-npm install
-# npm update
-npm run build
-
-make
-```
