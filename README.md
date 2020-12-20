@@ -28,6 +28,7 @@ cd gui
 npm install
 # npm update
 npm run build
+cd ..
 
 make
 ```

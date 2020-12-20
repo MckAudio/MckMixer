@@ -38,12 +38,17 @@ LMLIBS = -L/usr/local/lib -lfreeverb3 -ljack ./uWebSockets/uSockets/*.o -lz -lsn
 
 
 release:
+	mkdir -p bin/release
 	cd ./uWebSockets/uSockets && make
-	g++ $(LSRCS) -o mck-mixer $(REL_FLAGS) --std=c++17 $(LMINCS) $(LMLIBS)
+	g++ $(LSRCS) -o ./bin/release/mck-mixer $(REL_FLAGS) --std=c++17 $(LMINCS) $(LMLIBS)
 
 debug:
+	mkdir -p ./bin/debug
 	cd ./uWebSockets/uSockets && make
-	g++ $(LSRCS) -o mck-mixer $(DEB_FLAGS) --std=c++17 $(LMINCS) $(LMLIBS)
+	g++ $(LSRCS) -o ./bin/debug/mck-mixer $(DEB_FLAGS) --std=c++17 $(LMINCS) $(LMLIBS)
+
+install: release
+	cp ./bin/release/mck-mixer /usr/bin/
 
 old:
 	g++ ./src/main.cpp -o simplerev --std=c++17 -I/usr/local/include/libfreeverb3-3 -L/usr/local/lib -lfreeverb3 -ljack
