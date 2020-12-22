@@ -39,11 +39,12 @@ make
 
 ## Known Issues
 
-```
 - [ ] GUI Directory (www) is relative to executable
 - [ ] Install directory for freeverb3 lib on Fedora is wrong
 
-```
+## TODO
+
+- [ ] Cleanup Makefile
 
 ## Features
 
