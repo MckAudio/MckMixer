@@ -6,9 +6,22 @@
 ### Build dependencies
 
 ```
-sudo apt install build-essentials libfftw3-dev libjack-jackd2-dev
+
+# Debian / Ubuntu
+
+sudo apt install build-essentials nodejs npm
+sudo apt install libfftw3-dev libjack-jackd2-dev zlib1g-dev libsndfile1-dev
 
 sudo ld-config
+
+
+# Fedora
+
+sudo dnf install make automake libtool gcc-c++ nodejs npm
+sudo dnf install fftw-devel jack-audio-connection-kit-devel zlib-devel libsndfile-devel
+
+sudo ldconfig
+
 ```
 
 ### Build steps
@@ -16,21 +29,20 @@ sudo ld-config
 ```
 git clone ...
 cd MckMixer
-git submodule update --init --recursive
 
-cd freeverb3
-./autogen.sh
-./configure
-make
-sudo make install
+make dependencies
 
-cd gui
-npm install
-# npm update
-npm run build
-cd ..
+make gui
 
 make
+```
+
+## Known Issues
+
+```
+- [ ] GUI Directory (www) is relative to executable
+- [ ] Install directory for freeverb3 lib on Fedora is wrong
+
 ```
 
 ## Features
@@ -61,4 +73,4 @@ make
 - [ ] Metering
   - [ ] Pre/Post Meters for Inputs
   - [ ] Master Meter for Outputs
-  - [ ] Oscillograph view for output / maybe input also?
+  - [ ] Oscillograph view for output / maybe input

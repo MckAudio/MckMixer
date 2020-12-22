@@ -47,14 +47,25 @@ debug:
 	cd ./uWebSockets/uSockets && make
 	g++ $(LSRCS) -o ./bin/debug/mck-mixer $(DEB_FLAGS) --std=c++17 $(LMINCS) $(LMLIBS)
 
-install: release
+install: gui release
 	cp ./bin/release/mck-mixer /usr/bin/
+
+test:
+	cd gui && ls
+	ls
+	cd freeverb3
+
+dependencies:
+	git submodule update --init --recursive
+	cd freeverb3 && ./autogen.sh && ./configure && make && sudo make install
+	cd gui && npm install && npm install svelte@3.24.1 && npm run build
+
+.PHONY: gui
+gui:
+	cd gui && npm run build
 
 old:
 	g++ ./src/main.cpp -o simplerev --std=c++17 -I/usr/local/include/libfreeverb3-3 -L/usr/local/lib -lfreeverb3 -ljack
-
-gui: $(BIN)
-	@echo Building simple reverb with GUI
 
 %.o: ./src/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
@@ -74,7 +85,8 @@ $(BIN): $(OBJS)
 wxrev:
 	g++ ./src/wxrev.cpp -o guirev `wx-config --cppflags` `wx-config --libs`
 
-.PHONY clean:
+.PHONY: clean
+clean:
 	rm simplerev || true
 	rm wxrev || true
 	rm mck-* || true
