@@ -1,9 +1,9 @@
 <script>
   import { onMount, onDestroy } from "svelte";
-  import { DbToLog, LogToDb } from "./Tools.svelte";
+  import { DbToLog, LogToDb } from "../MckSvelte/utils/Tools.svelte";
   import Settings from "./Settings.svelte";
-  import Slider from "./Slider.svelte";
-  import SliderLabel from "./SliderLabel.svelte";
+  import Slider from "../MckSvelte/controls/Slider.svelte";
+  import SliderLabel from "../MckSvelte/controls/SliderLabel.svelte";
   import Channel from "./Channel.svelte";
   import ReverbSend from "./ReverbSend.svelte";
   import DelaySend from "./DelaySend.svelte";
