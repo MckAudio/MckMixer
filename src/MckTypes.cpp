@@ -46,42 +46,6 @@ void mck::from_json(const nlohmann::json &j, ConnectionCommand &c)
     c.target = j.at("target").get<std::string>();
 }
 
-// TRANSPORT COMMAND
-void mck::to_json(nlohmann::json &j, const TransportCommand &t) {
-    j["mode"] = t.mode;
-    j["tempo"] = t.tempo;
-}
-void mck::from_json(const nlohmann::json &j, TransportCommand &t) {
-    t.mode = j.at("mode").get<char>();
-    t.tempo = j.at("tempo").get<double>();
-}
-// TRANSPORT STATE
-void mck::to_json(nlohmann::json &j, const TransportState &t) {
-    j["state"] = t.state;
-    j["tempo"] = t.tempo;
-    j["pulseIdx"] = t.pulseIdx;
-    j["pulse"] = t.pulse;
-    j["nPulses"] = t.nPulses;
-    j["pulseLen"] = t.pulseLen;
-    j["beat"] = t.beat;
-    j["nBeats"] = t.nBeats;
-    j["beatLen"] = t.beatLen;
-    j["bar"] = t.bar;
-    j["barLen"] = t.barLen;
-}
-void mck::from_json(const nlohmann::json &j, TransportState &t) {
-    t.state = j.at("state").get<char>();
-    t.tempo = j.at("tempo").get<double>();
-    t.pulseIdx = j.at("pulseIdx").get<unsigned>();
-    t.pulse = j.at("pulse").get<unsigned>();
-    t.nPulses = j.at("nPulses").get<unsigned>();
-    t.pulseLen = j.at("pulseLen").get<unsigned>();
-    t.beat = j.at("beat").get<unsigned>();
-    t.nBeats = j.at("nBeats").get<unsigned>();
-    t.beatLen = j.at("beatLen").get<unsigned>();
-    t.bar = j.at("bar").get<unsigned>();
-    t.barLen = j.at("barLen").get<unsigned>();
-}
 
 // RECORDING
 void mck::to_json(nlohmann::json &j, const Recording &r)

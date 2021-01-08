@@ -1,6 +1,7 @@
 #pragma once
 
-#include "nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
+#include <Transport.hpp>
 #include <vector>
 #include <string>
 
@@ -39,52 +40,6 @@ namespace mck
     };
     void to_json(nlohmann::json &j, const ConnectionCommand &c);
     void from_json(const nlohmann::json &j, ConnectionCommand &c);
-
-    enum TransCmdType
-    {
-        TC_NOTHING,
-        TC_STOP,
-        TC_START,
-        TC_CONTINUE,
-        TC_TEMPO,
-        TC_LENGTH
-    };
-
-    enum TransState
-    {
-        TS_IDLE,
-        TS_RUNNING,
-        TS_PAUSING,
-        TS_LENGTH
-    };
-
-    struct TransportCommand
-    {
-        char mode;
-        double tempo;
-        TransportCommand() : mode(TC_NOTHING), tempo(0.0) {}
-    };
-    void to_json(nlohmann::json &j, const TransportCommand &t);
-    void from_json(const nlohmann::json &j, TransportCommand &t);
-
-    struct TransportState
-    {
-        char state;
-        double tempo;
-        unsigned pulseIdx;  // sample index of last pulse
-        unsigned pulse;
-        unsigned nPulses;  // pulses per beat
-        unsigned pulseLen; // samples per pulse
-        unsigned beat;
-        unsigned nBeats;  // beats per bar
-        unsigned beatLen; // samples per beat
-        unsigned bar;
-        unsigned barLen; // samples per bar
-
-        TransportState() : state(TS_IDLE), tempo(0.0), pulse(0), nPulses(0), pulseLen(0), beat(0), nBeats(0), beatLen(0), bar(0), barLen(0) {}
-    };
-    void to_json(nlohmann::json &j, const TransportState &t);
-    void from_json(const nlohmann::json &j, TransportState &t);
 
     struct Recording
     {

@@ -3,11 +3,11 @@
 #include "MckTypes.h"
 #include "MckDelay.h"
 #include "MckRecorder.h"
-#include "DspHelper.h"
-#include "JackHelper.h"
-#include "Metronome.h"
+#include "DspHelper.hpp"
+#include "JackHelper.hpp"
+#include "Metronome.hpp"
 #include "MckLooper.h"
-#include "MckTransport.h"
+#include "Transport.hpp"
 #include "MckControl.h"
 
 // Audio

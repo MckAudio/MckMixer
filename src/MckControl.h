@@ -5,7 +5,7 @@
 #include <cmath>
 
 #include "MckTypes.h"
-#include "DspHelper.h"
+#include "DspHelper.hpp"
 
 namespace mck
 {
