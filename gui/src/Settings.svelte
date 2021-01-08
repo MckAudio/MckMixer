@@ -1,9 +1,9 @@
 <script>
-  import SliderLabel from "./SliderLabel.svelte";
-  import Select from "./Select.svelte";
-  import Button from "./Button.svelte";
-  import Meter from "./Meter.svelte";
-  import { DbToLog, LogToDb, FormatCon } from "./Tools.svelte";
+  import SliderLabel from "../MckSvelte/controls/SliderLabel.svelte";
+  import Select from "../MckSvelte/controls/Select.svelte";
+  import Button from "../MckSvelte/controls/Button.svelte";
+  import Meter from "../MckSvelte/controls/Meter.svelte";
+  import { DbToLog, LogToDb, FormatCon } from "../MckSvelte/utils/Tools.svelte";
 
   export let data = undefined;
   export let rtData = undefined;

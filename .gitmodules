@@ -10,3 +10,6 @@
 [submodule "helper"]
 	path = helper
 	url = git@github.com:HenriCSHC/MckHelper.git
+[submodule "gui/MckSvelte"]
+	path = gui/MckSvelte
+	url = git@github.com:HenriCSHC/MckSvelte.git
