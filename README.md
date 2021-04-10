@@ -20,7 +20,7 @@ sudo ld-config
 sudo dnf install make automake libtool gcc-c++ nodejs npm
 sudo dnf install fftw-devel jack-audio-connection-kit-devel zlib-devel libsndfile-devel
 
-sudo ldconfig
+sudo ldconfig -v
 
 ```
 
@@ -36,6 +36,10 @@ make gui
 
 make
 ```
+
+## Build issues
+
+If libfreeverb3 is not found, add /usr/local/lib to /etc/ld.conf or in separate .conf file in the directory /etc/ld.conf.d/ and run sudo ldconfig -v.
 
 ## Known Issues
 

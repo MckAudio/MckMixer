@@ -7,7 +7,14 @@ static int process(jack_nframes_t nframes, void *arg)
 }
 
 mck::Mixer::Mixer()
-    : m_isInitialized(false), m_bufferSize(0), m_sampleRate(0), m_activeConfig(0), m_newConfig(1), m_nInputChans(), m_meterCoeff(1.0)
+    : m_gui(nullptr),
+      m_isInitialized(false),
+      m_bufferSize(0),
+      m_sampleRate(0),
+      m_activeConfig(0),
+      m_newConfig(1),
+      m_nInputChans(),
+      m_meterCoeff(1.0)
 {
     m_nInputChans[0] = 0;
     m_nInputChans[1] = 0;
@@ -937,8 +944,10 @@ void mck::Mixer::GetRealTimeData(mck::RealTimeData &r)
     r.meterOut.r = m_meterOut[1];
 }
 
-bool mck::Mixer::DataWasUpdated() {
-    if (m_dataUpdate.load()) {
+bool mck::Mixer::DataWasUpdated()
+{
+    if (m_dataUpdate.load())
+    {
         m_dataUpdate = false;
         return true;
     }
@@ -1028,4 +1037,142 @@ bool mck::Mixer::SaveConfig(mck::Config &config, std::string path)
     configFile << std::setw(4) << j << std::endl;
     configFile.close();
     return true;
+}
+
+void mck::Mixer::ReceiveMessage(Message &msg)
+{
+    if (msg.msgType == "get")
+    {
+        if (msg.section == "data")
+        {
+            mck::Config config;
+            GetConfig(config);
+            m_gui->SendMessage("config", "partial", config);
+        }
+    }
+    else if (msg.msgType == "ping")
+    {
+        m_gui->SendMessage("system", "pong", "");
+
+        // Get Realtime Data
+        GetRealTimeData(m_rtData);
+        m_gui->SendMessage("system", "realtime", m_rtData);
+
+        // Data Updates
+        if (DataWasUpdated())
+        {
+            mck::Config config;
+            GetConfig(config);
+            m_gui->SendMessage("config", "partial", config);
+        }
+    }
+    else if (msg.msgType == "partial" && msg.section == "config")
+    {
+        mck::Config config;
+        try
+        {
+            config = json::parse(msg.data);
+            SetConfig(config);
+        }
+        catch (std::exception &e)
+        {
+            std::cout << "Failed to convert the config: " << std::endl
+                      << e.what() << std::endl;
+            GetConfig(config);
+        }
+        m_gui->SendMessage("config", "partial", config);
+    }
+    else if (msg.msgType == "command")
+    {
+        if (msg.section == "recording")
+        {
+            if (msg.data == "start")
+            {
+                StartRecording();
+            }
+            else if (msg.data == "stop")
+            {
+                StopRecording();
+            }
+        }
+        else if (msg.section == "channel")
+        {
+            try
+            {
+                mck::Config config;
+                mck::ChannelCommand cc = json::parse(msg.data);
+                if (cc.command == "add")
+                {
+                    AddChannel(cc.isStereo, config);
+                }
+                else if (cc.command == "remove")
+                {
+                    RemoveChannel(cc.idx, config);
+                }
+                else
+                {
+                    return;
+                }
+
+                m_gui->SendMessage("config", "partial", config);
+            }
+            catch (std::exception &e)
+            {
+                std::fprintf(stderr, "Failed to read channel command: %s\n", e.what());
+            }
+        }
+        else if (msg.section == "connection")
+        {
+            try
+            {
+                mck::Config config;
+                mck::ConnectionCommand cc = json::parse(msg.data);
+                ApplyCommand(cc, config);
+                m_gui->SendMessage("config", "partial", config);
+            }
+            catch (std::exception &e)
+            {
+                std::fprintf(stderr, "Failed to read connection command: %s\n", e.what());
+            }
+        }
+        else if (msg.section == "loop")
+        {
+            try
+            {
+                mck::LoopCommand lc = json::parse(msg.data);
+                ApplyCommand(lc);
+            }
+            catch (std::exception &e)
+            {
+                std::fprintf(stderr, "Failed to read loop command: %s\n", e.what());
+            }
+        }
+        else if (msg.section == "transport")
+        {
+            try
+            {
+                mck::TransportCommand tc = json::parse(msg.data);
+                ApplyCommand(tc);
+            }
+            catch (std::exception &e)
+            {
+                std::fprintf(stderr, "Failed to read transport command: %s\n", e.what());
+            }
+        }
+    }
+    else if (msg.msgType == "request")
+    {
+        if (msg.section == "source")
+        {
+            std::vector<std::string> cons;
+            mck::GetInputPorts(GetClient(), cons);
+            m_gui->SendMessage("source", "partial", cons);
+        }
+        else if (msg.section == "target")
+        {
+            std::vector<std::string> cons;
+            mck::GetOutputPorts(GetClient(), cons);
+            m_gui->SendMessage("target", "partial", cons);
+        }
+    }
 }

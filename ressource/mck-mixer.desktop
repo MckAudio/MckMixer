@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=MckMixer
+GenericName=Live Audio Mixer
+Exec=mck-mixer
+Type=Application
+Categories=Audio;AudioVideo;Midi;

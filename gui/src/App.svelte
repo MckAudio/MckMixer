@@ -7,7 +7,7 @@
   import Channel from "./Channel.svelte";
   import ReverbSend from "./ReverbSend.svelte";
   import DelaySend from "./DelaySend.svelte";
-  
+
   let port = 9001;
   let socket = undefined;
   let socketConnected = false;
@@ -34,39 +34,26 @@
     let _msg = {
       msgType: "partial",
       section: "config",
-      data: JSON.stringify(_data)
+      data: JSON.stringify(_data),
     };
-    if (socketConnected) {
-      socket.send(JSON.stringify(_msg));
-    } else {
-      Connect("ws://127.0.0.1", port);
-      socket.send(JSON.stringify(_msg));
-    }
+    SendMessage(_msg);
   }
-  function RecvMsg(_msg) {
-    if (_msg === undefined) {
-      return;
-    }
-    let _tmp = JSON.parse(_msg);
-    //console.log("[MSG]", _tmp);
-    if (_tmp.msgType == "pong") {
+  function ReceiveBackendMessage(_event) {
+    if (_event.detail.msgType == "pong") {
       RecvPing();
       return;
     }
-    if (_tmp.msgType == "partial") {
-      if (_tmp.section == "config") {
-        let _data = JSON.parse(_tmp.data);
-        data = _data;
-      } else if (_tmp.section == "source") {
-        let _sources = JSON.parse(_tmp.data);
-        sources = _sources;
-      } else if (_tmp.section == "target") {
-        let _targets = JSON.parse(_tmp.data);
-        targets = _targets;
+    if (_event.detail.msgType == "partial") {
+      if (_event.detail.section == "config") {
+        data = _event.detail.data;
+      } else if (_event.detail.section == "source") {
+        sources = _event.detail.data;
+      } else if (_event.detail.section == "target") {
+        targets = _event.detail.data;
       }
-    } else if (_tmp.msgType == "realtime") {
-      if (_tmp.section == "system") {
-        rtData = JSON.parse(_tmp.data);
+    } else if (_event.detail.msgType == "realtime") {
+      if (_event.detail.section == "system") {
+        rtData = _event.detail.data;
       }
     }
   }
@@ -80,11 +67,9 @@
     let _msg = {
       msgType: _msgType,
       section: _section,
-      data: _data
+      data: _data,
     };
-    if (socketConnected) {
-      socket.send(JSON.stringify(_msg));
-    }
+    SendMessage(_msg);
   }
 
   function SendPing() {
@@ -92,56 +77,77 @@
     let _msg = {
       msgType: "ping",
       section: "system",
-      data: ""
+      data: "",
     };
-    if (socketConnected) {
-      socket.send(JSON.stringify(_msg));
-    } else {
-      pingId = window.setTimeout(SendPing, 1000);
-    }
+    SendMessage(_msg);
   }
 
-  function Connect(_url, _port) {
-    let _uri = `${_url}:${_port}`;
-    console.log(_uri);
-    socket = new WebSocket(_uri);
-    socket.onopen = _evt => {
-      console.log("WS was opened!");
-      socketConnected = true;
-      pingId = window.setTimeout(SendPing, 1000);
-    };
-    socket.onclose = _evt => {
-      console.log("WS was closed!");
-      socketConnected = false;
-    };
-    socket.onmessage = _evt => RecvMsg(_evt.data);
-  }
   onMount(() => {
-    let _uri = document.URL;
-    let _url = _uri.substring(_uri.indexOf("://") + 3, _uri.lastIndexOf(":"));
-    Connect("ws://" + _url, port);
+    document.addEventListener("backendMessage", ReceiveBackendMessage);
+    SendMessage({
+      section: "data",
+      msgType: "get",
+      data: "",
+    });
+    SendPing();
   });
   onDestroy(() => {
-    if (socketConnected) {
-      socket.close();
-    }
+    document.removeEventListener("backendMessage", ReceiveBackendMessage);
   });
-
-  function AddChannel(_isStereo) {
-    let _msg = {
-      msgType: "command",
-      section: "channel",
-      data: JSON.stringify({
-        command: "add",
-        isStereo: _isStereo,
-        idx: 0
-      })
-    };
-    if (socketConnected) {
-      socket.send(JSON.stringify(_msg));
-    }
-  }
 </script>
+
+<div class="base">
+  {#if data != undefined}
+    <div class="settings">
+      <Settings
+        {rtData}
+        {data}
+        SendValue={(t, v) => SendValue(0, "master", t, v)}
+        {SendMsg}
+        {targets}
+      />
+    </div>
+    <div class="channels">
+      {#each data.channels as chan, i}
+        <Channel
+          index={i}
+          data={chan}
+          {SendMsg}
+          {sources}
+          meter={rtData.hasOwnProperty("meterIn")
+            ? rtData.meterIn[i]
+            : undefined}
+          looper={rtData.hasOwnProperty("looper")
+            ? rtData.looper[i]
+            : undefined}
+          SendValue={(t, v) => SendValue(i, "channels", t, v)}
+        />
+      {/each}
+    </div>
+    <div class="sends">
+      <ReverbSend
+        index={0}
+        data={data.reverb}
+        SendValue={(t, v) => SendValue(null, "reverb", t, v)}
+      />
+      <DelaySend
+        index={1}
+        data={data.delay}
+        SendValue={(t, v) => SendValue(null, "delay", t, v)}
+      />
+    </div>
+    <!--
+    <div class="master">
+      {#if data != undefined}
+        <Slider
+          vertical={true}
+          value={DbToLog(data.gain)}
+          Handler={_v => SendValue(undefined, 'master', 'gain', LogToDb(_v))} />
+      {/if}
+    </div>
+    -->
+  {/if}
+</div>
 
 <style>
   .base {
@@ -198,43 +204,3 @@
     background-color: #f0f0f0;
   }
 </style>
-
-<div class="base">
-  {#if data != undefined}
-    <div class="settings">
-      <Settings {rtData} {data} SendValue={(t,v) => SendValue(0, 'master', t, v)} {SendMsg} {targets}/>
-    </div>
-    <div class="channels">
-      {#each data.channels as chan, i}
-        <Channel
-          index={i}
-          data={chan}
-          {SendMsg}
-          {sources}
-          meter={rtData.hasOwnProperty("meterIn") ? rtData.meterIn[i] : undefined}
-          looper={rtData.hasOwnProperty("looper") ? rtData.looper[i] : undefined}
-          SendValue={(t, v) => SendValue(i, 'channels', t, v)} />
-      {/each}
-    </div>
-    <div class="sends">
-      <ReverbSend
-        index={0}
-        data={data.reverb}
-        SendValue={(t, v) => SendValue(null, 'reverb', t, v)} />
-      <DelaySend
-        index={1}
-        data={data.delay}
-        SendValue={(t, v) => SendValue(null, 'delay', t, v)} />
-    </div>
-    <!--
-    <div class="master">
-      {#if data != undefined}
-        <Slider
-          vertical={true}
-          value={DbToLog(data.gain)}
-          Handler={_v => SendValue(undefined, 'master', 'gain', LogToDb(_v))} />
-      {/if}
-    </div>
-    -->
-  {/if}
-</div>

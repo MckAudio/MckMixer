@@ -1,19 +1,5 @@
 #include "MckTypes.h"
 
-// MESSAGE
-void mck::to_json(nlohmann::json &j, const Message &m)
-{
-    j["section"] = m.section;
-    j["msgType"] = m.msgType;
-    j["data"] = m.data;
-}
-void mck::from_json(const nlohmann::json &j, Message &m)
-{
-    m.section = j.at("section").get<std::string>();
-    m.msgType = j.at("msgType").get<std::string>();
-    m.data = j.at("data").get<std::string>();
-}
-
 // CHANNEL COMMAND
 void mck::to_json(nlohmann::json &j, const ChannelCommand &c)
 {

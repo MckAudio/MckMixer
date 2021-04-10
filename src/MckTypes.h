@@ -7,18 +7,6 @@
 
 namespace mck
 {
-    struct Message
-    {
-        std::string section;
-        unsigned idx;
-        std::string msgType;
-        std::string data;
-        Message() : section(""), idx(0), msgType(""), data("") {}
-        Message(std::string _section, std::string _msgType) : section(_section), msgType(_msgType), idx(0), data("") {}
-    };
-    void to_json(nlohmann::json &j, const Message &m);
-    void from_json(const nlohmann::json &j, Message &m);
-
     struct ChannelCommand
     {
         bool isStereo;

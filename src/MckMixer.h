@@ -10,6 +10,9 @@
 #include "Transport.hpp"
 #include "MckControl.h"
 
+// Gui
+#include <GuiWindow.hpp>
+
 // Audio
 #include <freeverb/strev.hpp>
 #include <freeverb/progenitor2.hpp>
@@ -69,7 +72,7 @@ struct InputDsp
     InputDsp() : isStereo() {}
 };
 
-class Mixer
+class Mixer : GuiBase
 {
 public:
     Mixer();
@@ -97,11 +100,16 @@ public:
     void GetRealTimeData(mck::RealTimeData &r);
     bool DataWasUpdated();
 
+    void ReceiveMessage(Message &msg);
+    void SetGuiPtr(GuiWindow *gui) { m_gui = gui; };
+
 private:
+    GuiWindow *m_gui;
     bool m_isInitialized;
     jack_nframes_t m_bufferSize;
     jack_nframes_t m_sampleRate;
     mck::Config m_config[2];
+    mck::RealTimeData m_rtData;
     fs::path m_path;
 
     char m_activeConfig;
