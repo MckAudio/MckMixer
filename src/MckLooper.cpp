@@ -31,12 +31,12 @@ void mck::Looper::Init(unsigned samplerate, unsigned buffersize, Transport *tran
     return;
 }
 
-bool mck::Looper::ProcessMono(jack_default_audio_sample_t *inOut, TransportState &ts)
+bool mck::Looper::ProcessMono(jack_default_audio_sample_t *inOut, double gainLin, TransportState &ts)
 {
-    return ProcessStereo(inOut, nullptr, ts);
+    return ProcessStereo(inOut, nullptr, gainLin, ts);
 }
 
-bool mck::Looper::ProcessStereo(jack_default_audio_sample_t *inOutL, jack_default_audio_sample_t *inOutR, TransportState &ts)
+bool mck::Looper::ProcessStereo(jack_default_audio_sample_t *inOutL, jack_default_audio_sample_t *inOutR, double gainLin, TransportState &ts)
 {
     if (m_isInitialized == false)
     {
@@ -137,10 +137,10 @@ bool mck::Looper::ProcessStereo(jack_default_audio_sample_t *inOutL, jack_defaul
 
         for (unsigned i = offset; i < offset + len; i++)
         {
-            inOutL[i] += m_loops[loopIdx].buffer[0][m_loops[loopIdx].idx + i];
+            inOutL[i] += m_loops[loopIdx].buffer[0][m_loops[loopIdx].idx + i] * gainLin;
             if (stereo)
             {
-                inOutR[i] += m_loops[loopIdx].buffer[1][m_loops[loopIdx].idx + i];
+                inOutR[i] += m_loops[loopIdx].buffer[1][m_loops[loopIdx].idx + i] * gainLin;
             }
         }
         m_loops[loopIdx].idx += len;
@@ -156,10 +156,10 @@ bool mck::Looper::ProcessStereo(jack_default_audio_sample_t *inOutL, jack_defaul
 
                 for (unsigned i = offset; i < offset + len; i++)
                 {
-                    inOutL[i] += m_loops[loopIdx].buffer[0][m_loops[loopIdx].idx + i];
+                    inOutL[i] += m_loops[loopIdx].buffer[0][m_loops[loopIdx].idx + i] * gainLin;
                     if (stereo)
                     {
-                        inOutR[i] += m_loops[loopIdx].buffer[1][m_loops[loopIdx].idx + i];
+                        inOutR[i] += m_loops[loopIdx].buffer[1][m_loops[loopIdx].idx + i] * gainLin;
                     }
                 }
                 m_loops[loopIdx].idx += len;

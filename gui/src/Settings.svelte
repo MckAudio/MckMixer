@@ -116,7 +116,7 @@
   <div class="control">
     <i>New Channel:</i>
     <div class="splitter">
-      <Button Handler={() => AddChannel(false)}>Mono</Button>
+      <Button Handler={() => AddChannel(false)}>Monooo</Button>
       <Button Handler={() => AddChannel(true)}>Stereo</Button>
     </div>
   </div>
@@ -233,15 +233,4 @@
   </div>
   {/if}
   {/if}
-
-  <!-- CLOSE -->
-  <div class="control">
-    <i>Controls:</i>
-    <Button
-      Handler={() => {
-        SendMsg('command', 'system', 'close');
-      }}>
-      Close
-    </Button>
-  </div>
 </div>

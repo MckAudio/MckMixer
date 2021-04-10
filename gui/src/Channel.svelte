@@ -5,7 +5,12 @@
   import Button from "../MckSvelte/controls/Button.svelte";
   import Meter from "../MckSvelte/controls/Meter.svelte";
   import InputText from "../MckSvelte/controls/InputText.svelte";
-  import { DbToLog, LogToDb, FormatPan, FormatCon } from "../MckSvelte/utils/Tools.svelte";
+  import {
+    DbToLog,
+    LogToDb,
+    FormatPan,
+    FormatCon,
+  } from "../MckSvelte/utils/Tools.svelte";
 
   export let data = undefined;
   export let SendValue = undefined;
@@ -15,13 +20,22 @@
   export let meter = undefined;
   export let looper = undefined;
 
-  const state = ["Idle", "Should Play", "Playing", "Should Record", "Recording", "Should Stop", "Should Stop", "Stopped"];
+  const state = [
+    "Idle",
+    "Should Play",
+    "Playing",
+    "Should Record",
+    "Recording",
+    "Should Stop",
+    "Should Stop",
+    "Stopped",
+  ];
 
   function RemoveChannel() {
     let _data = JSON.stringify({
       command: "remove",
       isStereo: data.isStereo,
-      idx: index
+      idx: index,
     });
 
     if (SendMsg) {
@@ -35,7 +49,7 @@
       idx: index,
       subIdx: _rightChannel ? 1 : 0,
       command: _source == "disconnect" ? "disconnect" : "connect",
-      target: _source
+      target: _source,
     });
     if (SendMsg) {
       SendMsg("command", "connection", _data);
@@ -46,13 +60,178 @@
     let _data = JSON.stringify({
       chanIdx: index,
       loopIdx: 0,
-      mode: _cmd
+      mode: _cmd,
     });
     if (SendMsg) {
       SendMsg("command", "loop", _data);
     }
   }
 </script>
+
+<div class="base">
+  <i>{index + 1}</i>
+  <InputText value={data.name} Handler={(_v) => SendValue("name", _v)} />
+  {#if meter != undefined}
+    <div class="control">
+      <i>Meter:</i>
+      <Meter value={meter} stereo={data.isStereo} />
+    </div>
+  {/if}
+  <div class="control">
+    <i>Type:</i>
+    <div class="splitter">
+      <Button
+        value={data.isStereo == false}
+        Handler={() => SendValue("isStereo", false)}
+      >
+        Mono
+      </Button>
+      <Button value={data.isStereo} Handler={() => SendValue("isStereo", true)}>
+        Stereo
+      </Button>
+    </div>
+  </div>
+  {#if data.isStereo}
+    <div class="control">
+      <i>Left Source:</i>
+      <Select
+        items={sources}
+        value={data.sourceLeft}
+        numeric={false}
+        Opener={() => SendMsg("request", "source", "")}
+        Handler={(_v) => ConnectChannel(_v, false)}
+        Formatter={FormatCon}
+      />
+    </div>
+    <div class="control">
+      <i>Right Source:</i>
+      <Select
+        items={sources}
+        value={data.sourceRight}
+        numeric={false}
+        Opener={() => SendMsg("request", "target", "")}
+        Handler={(_v) => ConnectChannel(_v, true)}
+        Formatter={FormatCon}
+      />
+    </div>
+  {:else}
+    <div class="control">
+      <i>Source:</i>
+      <Select
+        items={["disconnect", ...sources]}
+        value={data.sourceLeft}
+        numeric={false}
+        Opener={() => SendMsg("request", "source", "")}
+        Handler={(_v) => ConnectChannel(_v, false)}
+        Formatter={FormatCon}
+      />
+    </div>
+    <div class="rest" />
+  {/if}
+  <div class="control">
+    <i>Pan:</i>
+    <SliderLabel
+      centered={true}
+      label={FormatPan(data.pan)}
+      value={data.pan / 100.0}
+      Handler={(_v) => SendValue("pan", _v * 100.0)}
+    />
+  </div>
+  <div class="control">
+    <i>Reverb Send:</i>
+    <SliderLabel
+      label={Math.round(data.sendReverb) + " dB"}
+      value={DbToLog(data.sendReverb)}
+      Handler={(_v) => SendValue("sendReverb", LogToDb(_v))}
+    />
+  </div>
+  <div class="control">
+    <i>Delay Send:</i>
+    <SliderLabel
+      label={Math.round(data.sendDelay) + " dB"}
+      value={DbToLog(data.sendDelay)}
+      Handler={(_v) => SendValue("sendDelay", LogToDb(_v))}
+    />
+  </div>
+  <div class="rest" />
+  <div class="control">
+    <i>Mute & Solo:</i>
+    <div class="gritter">
+      <Button Handler={() => SendValue("mute", !data.mute)} value={data.mute}
+        >Mute</Button
+      >
+      <Button Handler={() => SendValue("solo", !data.solo)} value={data.solo}
+        >Solo</Button
+      >
+    </div>
+  </div>
+  <div class="control">
+    <i>Input Gain:</i>
+    <SliderLabel
+      label={Math.round(data.inputGain) + " dB"}
+      value={DbToLog(data.inputGain)}
+      Handler={(_v) => SendValue("inputGain", LogToDb(_v))}
+    />
+  </div>
+  <div class="control">
+    <i>Loop Gain:</i>
+    <SliderLabel
+      label={Math.round(data.loopGain) + " dB"}
+      value={DbToLog(data.loopGain)}
+      Handler={(_v) => SendValue("loopGain", LogToDb(_v))}
+    />
+  </div>
+  <div class="control">
+    <i>Master Gain:</i>
+    <SliderLabel
+      label={Math.round(data.gain) + " dB"}
+      value={DbToLog(data.gain)}
+      Handler={(_v) => SendValue("gain", LogToDb(_v))}
+    />
+  </div>
+  <div class="rest" />
+  <div class="control">
+    <i>Controls:</i>
+    <Button Handler={() => RemoveChannel()}>Delete Channel</Button>
+  </div>
+  {#if looper}
+    {#if looper.hasOwnProperty("state")}
+      <div class="control">
+        <i>Loops:</i>
+        <div class="gritter">
+          <Button disabled={looper.state != 0} Handler={() => SendLoopCmd(2)}>
+            Record
+          </Button>
+          <Button disabled={looper.state != 0} Handler={() => SendLoopCmd(1)}>
+            Play
+          </Button>
+          <Button
+            disabled={looper.state == 0 ||
+              looper.state == 5 ||
+              looper.state == 6}
+            Handler={() => SendLoopCmd(3)}
+          >
+            Stop
+          </Button>
+        </div>
+      </div>
+      {#if looper.state == 2 || looper.state == 4}
+        <div class="control">
+          <i>Loop Position:</i>
+          <SliderLabel
+            disabled={true}
+            label={Math.round(looper.pos * 100.0) + " %"}
+            value={looper.pos}
+          />
+        </div>
+      {/if}
+      <div class="control">
+        <i>Loop State:</i>
+        <span>{state[looper.state]}</span>
+      </div>
+    {/if}
+  {/if}
+</div>
 
 <style>
   .base {
@@ -124,136 +303,3 @@
     height: 43px;
   }
 </style>
-
-<div class="base">
-  <i>{index + 1}</i>
-  <InputText value={data.name} Handler={_v => SendValue('name', _v)} />
-  {#if meter != undefined}
-    <div class="control">
-      <i>Meter:</i>
-      <Meter value={meter} stereo={data.isStereo} />
-    </div>
-  {/if}
-  <div class="control">
-    <i>Type:</i>
-    <div class="splitter">
-      <Button
-        value={data.isStereo == false}
-        Handler={() => SendValue('isStereo', false)}>
-        Mono
-      </Button>
-      <Button value={data.isStereo} Handler={() => SendValue('isStereo', true)}>
-        Stereo
-      </Button>
-    </div>
-  </div>
-  {#if data.isStereo}
-    <div class="control">
-      <i>Left Source:</i>
-      <Select
-        items={sources}
-        value={data.sourceLeft}
-        numeric={false}
-        Opener={() => SendMsg('request', 'source', '')}
-        Handler={_v => ConnectChannel(_v, false)}
-        Formatter={FormatCon} />
-    </div>
-    <div class="control">
-      <i>Right Source:</i>
-      <Select
-        items={sources}
-        value={data.sourceRight}
-        numeric={false}
-        Opener={() => SendMsg('request', 'target', '')}
-        Handler={_v => ConnectChannel(_v, true)}
-        Formatter={FormatCon} />
-    </div>
-  {:else}
-    <div class="control">
-      <i>Source:</i>
-      <Select
-        items={['disconnect', ...sources]}
-        value={data.sourceLeft}
-        numeric={false}
-        Opener={() => SendMsg('request', 'source', '')}
-        Handler={_v => ConnectChannel(_v, false)}
-        Formatter={FormatCon} />
-    </div>
-    <div class="rest" />
-  {/if}
-  <div class="control">
-    <i>Pan:</i>
-    <SliderLabel
-      centered={true}
-      label={FormatPan(data.pan)}
-      value={data.pan / 100.0}
-      Handler={_v => SendValue('pan', _v * 100.0)} />
-  </div>
-  <div class="control">
-    <i>Reverb Send:</i>
-    <SliderLabel
-      label={Math.round(data.sendReverb) + ' dB'}
-      value={DbToLog(data.sendReverb)}
-      Handler={_v => SendValue('sendReverb', LogToDb(_v))} />
-  </div>
-  <div class="control">
-    <i>Delay Send:</i>
-    <SliderLabel
-      label={Math.round(data.sendDelay) + ' dB'}
-      value={DbToLog(data.sendDelay)}
-      Handler={_v => SendValue('sendDelay', LogToDb(_v))} />
-  </div>
-  <div class="rest" />
-  <div class="control">
-  <i>Mute & Solo:</i>
-    <div class="gritter">
-      <Button Handler={()=>SendValue('mute', !data.mute)} value={data.mute}>Mute</Button>
-      <Button Handler={()=>SendValue('solo', !data.solo)} value={data.solo}>Solo</Button>
-    </div>
-  </div>
-  <div class="control">
-    <i>Gain:</i>
-    <SliderLabel
-      label={Math.round(data.gain) + ' dB'}
-      value={DbToLog(data.gain)}
-      Handler={_v => SendValue('gain', LogToDb(_v))} />
-  </div>
-  <div class="rest" />
-  <div class="control">
-    <i>Controls:</i>
-    <Button Handler={() => RemoveChannel()}>Delete Channel</Button>
-  </div>
-  {#if looper}
-    {#if looper.hasOwnProperty('state')}
-      <div class="control">
-        <i>Loops:</i>
-        <div class="gritter">
-          <Button disabled={looper.state != 0} Handler={() => SendLoopCmd(2)}>
-            Record
-          </Button>
-          <Button disabled={looper.state != 0} Handler={() => SendLoopCmd(1)}>
-            Play
-          </Button>
-          <Button
-            disabled={looper.state == 0 || looper.state == 5 || looper.state == 6}
-            Handler={() => SendLoopCmd(3)}>
-            Stop
-          </Button>
-        </div>
-      </div>
-      {#if looper.state == 2 || looper.state == 4}
-      <div class="control">
-        <i>Loop Position:</i>
-        <SliderLabel
-        disabled={true}
-          label={Math.round(looper.pos * 100.0) + ' %'}
-          value={looper.pos} />
-      </div>
-      {/if}
-      <div class="control">
-        <i>Loop State:</i>
-        <span>{state[looper.state]}</span>
-      </div>
-    {/if}
-  {/if}
-</div>

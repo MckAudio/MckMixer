@@ -219,6 +219,8 @@ void mck::to_json(nlohmann::json &j, const Channel &c)
     j["isStereo"] = c.isStereo;
     j["mute"] = c.mute;
     j["solo"] = c.solo;
+    j["inputGain"] = c.inputGain;
+    j["loopGain"] = c.loopGain;
     j["gain"] = c.gain;
     j["pan"] = c.pan;
     j["sendReverb"] = c.sendReverb;
@@ -238,6 +240,16 @@ void mck::from_json(const nlohmann::json &j, Channel &c)
     } catch (std::exception &e) {
         c.mute = false;
         c.solo = false;
+    }
+    try {
+        c.inputGain = j.at("inputGain").get<double>();
+    } catch (std::exception &e) {
+        c.inputGain = 0.0;
+    }
+    try {
+        c.loopGain = j.at("loopGain").get<double>();
+    } catch (std::exception &e) {
+        c.loopGain = 0.0;
     }
     c.gain = j.at("gain").get<double>();
     c.pan = j.at("pan").get<double>();

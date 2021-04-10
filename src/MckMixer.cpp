@@ -281,6 +281,8 @@ bool mck::Mixer::SetConfig(mck::Config &config)
 
         config.channels[i].pan = std::min(100.0, std::max(0.0, config.channels[i].pan));
 
+        config.channels[i].inputGainLin = mck::DbToLin(config.channels[i].inputGain);
+        config.channels[i].loopGainLin = mck::DbToLin(config.channels[i].loopGain);
         config.channels[i].gainLin = mck::DbToLin(config.channels[i].gain);
         if (config.channels[i].mute || (soloSet && !config.channels[i].solo))
         {
@@ -693,16 +695,36 @@ void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
         }
     }
 
+    // Apply Input Gain
+    for (unsigned i = 0; i < m_config[m_activeConfig].channelCount; i++)
+    {
+        if (m_inputDsp[i].isStereo)
+        {
+            for (unsigned s = 0; s < nframes; s++)
+            {
+                m_inputDsp[i].buffer[0][s] *= m_config[m_activeConfig].channels[i].inputGainLin;
+                m_inputDsp[i].buffer[1][s] *= m_config[m_activeConfig].channels[i].inputGainLin;
+            }
+        }
+        else
+        {
+            for (unsigned s = 0; s < nframes; s++)
+            {
+                m_inputDsp[i].buffer[0][s] *= m_config[m_activeConfig].channels[i].inputGainLin;
+            }
+        }
+    }
+
     // Looper
     for (unsigned i = 0; i < m_config[m_activeConfig].channelCount; i++)
     {
         if (m_inputDsp[i].isStereo)
         {
-            m_inputDsp[i].looper.ProcessStereo(m_inputDsp[i].buffer[0], m_inputDsp[i].buffer[1], transState);
+            m_inputDsp[i].looper.ProcessStereo(m_inputDsp[i].buffer[0], m_inputDsp[i].buffer[1], m_config[m_activeConfig].channels[i].loopGainLin, transState);
         }
         else
         {
-            m_inputDsp[i].looper.ProcessMono(m_inputDsp[i].buffer[0], transState);
+            m_inputDsp[i].looper.ProcessMono(m_inputDsp[i].buffer[0], m_config[m_activeConfig].channels[i].loopGainLin, transState);
         }
     }
 

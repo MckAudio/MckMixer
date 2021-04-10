@@ -36,8 +36,8 @@ public:
     ~Looper();
     void Init(unsigned samplerate, unsigned buffersize, Transport *trans);
 
-    bool ProcessMono(jack_default_audio_sample_t *inOut, TransportState &ts);
-    bool ProcessStereo(jack_default_audio_sample_t *inOutL, jack_default_audio_sample_t *inOutR, TransportState &ts);
+    bool ProcessMono(jack_default_audio_sample_t *inOut, double gainLin, TransportState &ts);
+    bool ProcessStereo(jack_default_audio_sample_t *inOutL, jack_default_audio_sample_t *inOutR, double gainLin, TransportState &ts);
 
     bool ApplyCommand(LoopCommand &cmd, bool isStereo);
 
