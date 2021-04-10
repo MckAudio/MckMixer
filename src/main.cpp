@@ -12,7 +12,7 @@
 
 // Types
 #include <nlohmann/json.hpp>
-#include "MckTypes.h"
+#include "MckTypes.hpp"
 
 // Gui
 #include <GuiWindow.hpp>
@@ -82,9 +82,11 @@ int main(int argc, char **argv)
     
     #ifdef DEBUG
         std::printf("[DEBUG MODE]\n");
-        m_gui.Show("MckMixer", "./www", 9002);
-    #else
+        m_gui.ShowDebug("MckMixer [Debug]", 5000);
+    #elif PRODUCTION
         m_gui.Show("MckMixer", "/usr/share/mck-mixer/gui", 9001);
+    #else
+        m_gui.Show("MckMixer [Release]", "./www", 9001);
     #endif
 
     CloseApplication();

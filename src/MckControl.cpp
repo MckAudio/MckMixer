@@ -15,7 +15,8 @@ bool mck::Control::ProcessMidi(jack_port_t *inPort, jack_port_t *outPort, jack_n
     }
 
     // Apply Data Changes
-    if (configChanged) {
+    if (configChanged)
+    {
         ApplyDataChanges(outBuf, config);
         configChanged = false;
     }
@@ -135,7 +136,8 @@ bool mck::Control::ProcessMidi(jack_port_t *inPort, jack_port_t *outPort, jack_n
         }
     }
 
-    if (newMode != config.controls.activeMode) {
+    if (newMode != config.controls.activeMode)
+    {
         config.controls.activeMode = newMode;
         ApplyDataChanges(outBuf, config);
         configChanged = true;
@@ -145,6 +147,120 @@ bool mck::Control::ProcessMidi(jack_port_t *inPort, jack_port_t *outPort, jack_n
 }
 
 bool mck::Control::ApplyCommand(ControlCommand &cmd)
+{
+    switch (cmd.type)
+    {
+    default:
+        break;
+    }
+    return true;
+}
+
+bool mck::Control::Process(jack_port_t *inPort, jack_port_t *outPort, jack_nframes_t nframes, Config &config, bool &configChanged)
+{
+    void *inBuffer = jack_port_get_buffer(inPort, nframes);
+    void *outBuf = jack_port_get_buffer(outPort, nframes);
+    jack_midi_clear_buffer(outBuf);
+
+    unsigned frame = 0;
+
+    // Apply Data Changes
+    if (configChanged)
+    {
+        //ApplyDataChanges(outBuf, config);
+        configChanged = false;
+    }
+
+    bool found = false;
+    char newMode = config.controls.activeMode;
+    // Get Controller Changes
+    jack_nframes_t evtCount = jack_midi_get_event_count(inBuffer);
+    jack_midi_event_t midiEvent;
+    bool isNoteOn = false;
+    bool isNoteOff = false;
+
+    for (unsigned i = 0; i < evtCount; i++)
+    {
+        int ret = jack_midi_event_get(&midiEvent, inBuffer, i);
+        if (ret != 0) {
+            continue;
+        }
+        if (midiEvent.size < 2)
+        {
+            continue;
+        }
+        MidiControl ctrl;
+        ctrl.learn = false;
+        ctrl.chan = midiEvent.buffer[0] & 0x0F;
+        ctrl.head = midiEvent.buffer[0] & 0xF0;
+        ctrl.data = midiEvent.buffer[1];
+        ctrl.set = true;
+
+        if (config.channelControls.learn)
+        {
+            if (ctrl.head != 0x80 && ctrl.head != 0x90 && ctrl.head != 0xB0)
+            {
+                continue;
+            }
+
+            if (config.channelControls.prevChannel.learn)
+            {
+                config.channelControls.prevChannel = ctrl;
+            }
+            else if (config.channelControls.nextChannel.learn)
+            {
+                config.channelControls.nextChannel = ctrl;
+            }
+            else if (config.channelControls.loopRecord.learn)
+            {
+                config.channelControls.loopRecord = ctrl;
+            }
+            else if (config.channelControls.loopStart.learn)
+            {
+                config.channelControls.loopStart = ctrl;
+            }
+            else if (config.channelControls.loopStop.learn)
+            {
+                config.channelControls.loopStop = ctrl;
+            }
+            config.channelControls.learn = false;
+            configChanged = true;
+        }
+        else
+        {
+            // SWITCH ETC.
+            if (config.channelControls.prevChannel == ctrl)
+            {
+                if (config.channelControls.activeChannel > 0) {
+                    config.channelControls.activeChannel -= 1;
+                    configChanged = true;
+                }
+            }
+            else if (config.channelControls.nextChannel == ctrl)
+            {
+                if (config.channelCount > 1 && config.channelControls.activeChannel < config.channelCount - 1) {
+                    config.channelControls.activeChannel += 1;
+                    configChanged = true;
+                }
+            }/*
+            else if (config.channelControls.loopRecord == ctrl)
+            {
+                config.channelControls.loopRecord = ctrl;
+            }
+            else if (config.channelControls.loopStart == ctrl)
+            {
+                config.channelControls.loopStart = ctrl;
+            }
+            else if (config.channelControls.loopStop == ctrl)
+            {
+                config.channelControls.loopStop = ctrl;
+            }*/
+        }
+    }
+    return true;
+}
+
+bool mck::Control::ApplyCommand(ChannelControlCommand &cmd)
 {
     switch (cmd.type)
     {

@@ -1,7 +1,7 @@
 CXX = g++
 
-DEB_FLAGS = -O0 -DDEBUG -ggdb3
-REL_FLAGS = -O2 -DNDEBUG -Wall
+DEB_FLAGS = -O0 -DDEBUG -ggdb3 -Wall
+REL_FLAGS = -O2 -DNDEBUG
 
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 
@@ -17,13 +17,17 @@ release:
 	mkdir -p bin/release
 	g++ $(REL_FLAGS) --std=c++17 $(LMINCS) $(LSRCS) -o ./bin/release/mck-mixer $(LMLIBS)
 
+production:
+	mkdir -p bin/dist
+	g++ -DPRODUCTION $(REL_FLAGS) --std=c++17 $(LMINCS) $(LSRCS) -o ./bin/release/mck-mixer $(LMLIBS)
+
 debug:
 	mkdir -p ./bin/debug
 	g++ $(DEB_FLAGS) --std=c++17 $(LMINCS) $(LSRCS) -o ./bin/debug/mck-mixer $(LMLIBS)
 
-install: gui release
+install: gui production
 	mkdir -p /usr/share/mck-mixer/gui/
-	cp ./bin/release/mck-mixer /usr/bin/
+	cp ./bin/production/mck-mixer /usr/bin/
 	cp -r ./www/* /usr/share/mck-mixer/gui/
 	cp -r ./ressource/*.desktop /usr/share/applications/
 

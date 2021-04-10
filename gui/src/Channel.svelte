@@ -19,6 +19,7 @@
   export let sources = [];
   export let meter = undefined;
   export let looper = undefined;
+  export let active = false;
 
   const state = [
     "Idle",
@@ -68,7 +69,7 @@
   }
 </script>
 
-<div class="base">
+<div class="base {active ? 'active' : ''}">
   <i>{index + 1}</i>
   <InputText value={data.name} Handler={(_v) => SendValue("name", _v)} />
   {#if meter != undefined}
@@ -243,6 +244,10 @@
     grid-auto-rows: min-content; /*minmax(min-content, max-content);*/
     grid-gap: 4px;
     border-radius: 2px;
+  }
+
+  .base.active {
+    background-color: #f0d000;
   }
 
   .base > i,

@@ -110,6 +110,7 @@
     <div class="channels">
       {#each data.channels as chan, i}
         <Channel
+          active={data.channelControls.activeChannel == i}
           index={i}
           data={chan}
           {SendMsg}
@@ -154,7 +155,7 @@
     width: 100%;
     height: 100%;
     display: grid;
-    grid-template-columns: 140px 1fr auto auto;
+    grid-template-columns: min-content 1fr auto auto;
     /*grid-row-gap: 1px;
     grid-column-gap: 1px;*/
     background-color: #333;
@@ -173,7 +174,7 @@
     height: calc(100% - 16px);
     width: calc(100% - 16px);
     overflow-x: auto;
-    overflow-y: hidden;
+    overflow-y: auto;
     background-color: #f0f0f0;
     display: grid;
     /*grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));*/

@@ -11,11 +11,12 @@
     "@rollup/plugin-node-resolve": "^7.1.3",
     "rollup": "^1.20.0",
     "rollup-plugin-livereload": "^1.3.0",
-    "rollup-plugin-svelte": "^5.2.3",
+    "rollup-plugin-svelte": "^7.1.0",
     "rollup-plugin-terser": "^5.3.1",
-    "svelte": "^3.24.1"
+    "svelte": "^3.37.0"
   },
   "dependencies": {
+    "rollup-plugin-css-only": "^3.1.0",
     "sirv-cli": "^0.4.6"
   }
 }

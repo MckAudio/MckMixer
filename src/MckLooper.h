@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Transport.hpp>
-#include "MckTypes.h"
+#include "MckTypes.hpp"
 #include <vector>
 #include <atomic>
 #include <cstring>

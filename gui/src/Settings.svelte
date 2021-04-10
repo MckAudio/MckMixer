@@ -45,6 +45,15 @@
       SendMsg("command", "transport", _data);
     }
   }
+  function SendCtrlCmd(_idx, _cmd) {
+    let _data = JSON.stringify({
+      cmd: _cmd + 1,
+      type: _idx + 1
+    });
+    if (SendMsg) {
+      SendMsg("command", "control", _data);
+    }
+  }
   function ChangeTempo(_tempo) {
     let _data = JSON.stringify({
       mode: 4,
@@ -116,7 +125,7 @@
   <div class="control">
     <i>New Channel:</i>
     <div class="splitter">
-      <Button Handler={() => AddChannel(false)}>Monooo</Button>
+      <Button Handler={() => AddChannel(false)}>Mono</Button>
       <Button Handler={() => AddChannel(true)}>Stereo</Button>
     </div>
   </div>
@@ -233,4 +242,25 @@
   </div>
   {/if}
   {/if}
+
+  <div class="control">
+    <i>Active Channel:</i>
+    <span>{data.channelControls.activeChannel}</span>
+  </div>
+  <div class="control">
+    <i>Prev Channel:</i>
+    <div class="gritter">
+      <Button disabled={data.channelControls.prevChannel.learn} Handler={()=>SendCtrlCmd(0, 0)}>Learn</Button>
+      <Button disabled={data.channelControls.prevChannel.learn === false} Handler={()=>SendCtrlCmd(0, 1)}>Stop</Button>
+      <Button disabled={data.channelControls.prevChannel.learn} Handler={()=>SendCtrlCmd(0, 2)}>Clear</Button>
+    </div>
+  </div>
+  <div class="control">
+    <i>Next Channel:</i>
+    <div class="gritter">
+      <Button disabled={data.channelControls.nextChannel.learn} Handler={()=>SendCtrlCmd(1, 0)}>Learn</Button>
+      <Button disabled={data.channelControls.nextChannel.learn === false} Handler={()=>SendCtrlCmd(1, 1)}>Stop</Button>
+      <Button disabled={data.channelControls.nextChannel.learn} Handler={()=>SendCtrlCmd(1, 2)}>Clear</Button>
+    </div>
+  </div>
 </div>

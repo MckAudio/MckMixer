@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "MckTypes.h"
+#include "MckTypes.hpp"
 #include "DspHelper.hpp"
 
 namespace mck

@@ -1,4 +1,4 @@
-#include "MckTypes.h"
+#include "MckTypes.hpp"
 
 // CHANNEL COMMAND
 void mck::to_json(nlohmann::json &j, const ChannelCommand &c)
@@ -31,7 +31,6 @@ void mck::from_json(const nlohmann::json &j, ConnectionCommand &c)
     c.command = j.at("command").get<std::string>();
     c.target = j.at("target").get<std::string>();
 }
-
 
 // RECORDING
 void mck::to_json(nlohmann::json &j, const Recording &r)
@@ -108,13 +107,15 @@ void mck::from_json(const nlohmann::json &j, LoopCommand &l)
     l.mode = j.at("mode").get<char>();
 }
 // LOOP STATE
-void mck::to_json(nlohmann::json &j, const LoopState &l) {
+void mck::to_json(nlohmann::json &j, const LoopState &l)
+{
     j["state"] = l.state;
     j["pos"] = l.pos;
     j["len"] = l.len;
     j["idx"] = l.idx;
 }
-void mck::from_json(const nlohmann::json &j, LoopState &l) {
+void mck::from_json(const nlohmann::json &j, LoopState &l)
+{
     l.state = j.at("state").get<char>();
     l.pos = j.at("pos").get<double>();
     l.len = j.at("len").get<double>();
@@ -122,37 +123,54 @@ void mck::from_json(const nlohmann::json &j, LoopState &l) {
 }
 
 // CONTROL COMMAND
-void mck::to_json(nlohmann::json &j, const ControlCommand &c) {
+void mck::to_json(nlohmann::json &j, const ControlCommand &c)
+{
     j["cmd"] = c.cmd;
     j["type"] = c.type;
     j["idx"] = c.idx;
 }
-void mck::from_json(const nlohmann::json &j, ControlCommand &c) {
+void mck::from_json(const nlohmann::json &j, ControlCommand &c)
+{
     c.cmd = j.at("cmd").get<char>();
     c.type = j.at("type").get<char>();
     c.idx = j.at("idx").get<unsigned>();
 }
 // CONTROL COMMAND
-void mck::to_json(nlohmann::json &j, const ControlState &c) {
+void mck::to_json(nlohmann::json &j, const ControlState &c)
+{
     j["state"] = c.state;
     j["type"] = c.type;
     j["idx"] = c.idx;
 }
-void mck::from_json(const nlohmann::json &j, ControlState &c) {
+void mck::from_json(const nlohmann::json &j, ControlState &c)
+{
     c.state = j.at("state").get<char>();
     c.type = j.at("type").get<char>();
     c.idx = j.at("idx").get<unsigned>();
 }
 
 // MIDI CONTROL
-void mck::to_json(nlohmann::json &j, const MidiControl &m) {
+bool mck::MidiControl::operator==(const MidiControl &m)
+{
+    return (learn == m.learn) &&
+           (set == m.set) &&
+           (head == m.head) &&
+           (data == m.data) &&
+           (chan == m.chan) &&
+           (type == m.type);
+}
+void mck::to_json(nlohmann::json &j, const MidiControl &m)
+{
+    j["learn"] = m.learn;
     j["set"] = m.set;
     j["head"] = m.head;
     j["data"] = m.data;
     j["chan"] = m.chan;
     j["type"] = m.type;
 }
-void mck::from_json(const nlohmann::json &j, MidiControl &m) {
+void mck::from_json(const nlohmann::json &j, MidiControl &m)
+{
+    m.learn = j.at("learn").get<bool>();
     m.set = j.at("set").get<bool>();
     m.head = j.at("head").get<unsigned char>();
     m.data = j.at("data").get<unsigned char>();
@@ -160,16 +178,19 @@ void mck::from_json(const nlohmann::json &j, MidiControl &m) {
     m.type = j.at("type").get<unsigned char>();
 }
 // COMBO CONTROL
-void mck::to_json(nlohmann::json &j, const ComboControl &c) {
+void mck::to_json(nlohmann::json &j, const ComboControl &c)
+{
     j["rotary"] = c.rotary;
     j["push"] = c.push;
 }
-void mck::from_json(const nlohmann::json &j, ComboControl &c) {
+void mck::from_json(const nlohmann::json &j, ComboControl &c)
+{
     c.rotary = j.at("rotary").get<MidiControl>();
     c.push = j.at("push").get<MidiControl>();
 }
 // CONTROLS
-void mck::to_json(nlohmann::json &j, const Controls &c) {
+void mck::to_json(nlohmann::json &j, const Controls &c)
+{
     j["activeMode"] = c.activeMode;
     j["activeChannel"] = c.activeChannel;
     j["numCombo"] = c.numCombo;
@@ -179,7 +200,8 @@ void mck::to_json(nlohmann::json &j, const Controls &c) {
     j["master"] = c.master;
     j["mode"] = c.mode;
 }
-void mck::from_json(const nlohmann::json &j, Controls &c) {
+void mck::from_json(const nlohmann::json &j, Controls &c)
+{
     c.activeMode = j.at("activeMode").get<unsigned>();
     c.activeChannel = j.at("activeChannel").get<unsigned>();
     c.numCombo = j.at("numCombo").get<unsigned>();
@@ -188,6 +210,38 @@ void mck::from_json(const nlohmann::json &j, Controls &c) {
     c.combo = j.at("combo").get<std::vector<ComboControl>>();
     c.master = j.at("master").get<std::vector<MidiControl>>();
     c.mode = j.at("mode").get<std::vector<MidiControl>>();
+}
+// Channel Control Command
+void mck::to_json(nlohmann::json &j, const ChannelControlCommand &c)
+{
+    j["cmd"] = c.cmd;
+    j["type"] = c.type;
+}
+void mck::from_json(const nlohmann::json &j, ChannelControlCommand &c)
+{
+    c.cmd = j.at("cmd").get<char>();
+    c.type = j.at("type").get<unsigned>();
+}
+// Channel Controls
+void mck::to_json(nlohmann::json &j, const ChannelControls &c)
+{
+    j["learn"] = c.learn;
+    j["activeChannel"] = c.activeChannel;
+    j["prevChannel"] = c.prevChannel;
+    j["nextChannel"] = c.nextChannel;
+    j["loopRecord"] = c.loopRecord;
+    j["loopStart"] = c.loopStart;
+    j["loopStop"] = c.loopStop;
+}
+void mck::from_json(const nlohmann::json &j, ChannelControls &c)
+{
+    c.learn = j.at("learn").get<bool>();
+    c.activeChannel = j.at("activeChannel").get<unsigned>();
+    c.prevChannel = j.at("prevChannel").get<MidiControl>();
+    c.nextChannel = j.at("nextChannel").get<MidiControl>();
+    c.loopRecord = j.at("loopRecord").get<MidiControl>();
+    c.loopStart = j.at("loopStart").get<MidiControl>();
+    c.loopStop = j.at("loopStop").get<MidiControl>();
 }
 
 // REAL TIME DATA
@@ -234,21 +288,30 @@ void mck::from_json(const nlohmann::json &j, Channel &c)
 {
     c.name = j.at("name").get<std::string>();
     c.isStereo = j.at("isStereo").get<bool>();
-    try {
+    try
+    {
         c.mute = j.at("mute").get<bool>();
         c.solo = j.at("solo").get<bool>();
-    } catch (std::exception &e) {
+    }
+    catch (std::exception &e)
+    {
         c.mute = false;
         c.solo = false;
     }
-    try {
+    try
+    {
         c.inputGain = j.at("inputGain").get<double>();
-    } catch (std::exception &e) {
+    }
+    catch (std::exception &e)
+    {
         c.inputGain = 0.0;
     }
-    try {
+    try
+    {
         c.loopGain = j.at("loopGain").get<double>();
-    } catch (std::exception &e) {
+    }
+    catch (std::exception &e)
+    {
         c.loopGain = 0.0;
     }
     c.gain = j.at("gain").get<double>();
@@ -257,10 +320,13 @@ void mck::from_json(const nlohmann::json &j, Channel &c)
     c.sendDelay = j.at("sendDelay").get<double>();
     c.sourceLeft = j.at("sourceLeft").get<std::string>();
     c.sourceRight = j.at("sourceRight").get<std::string>();
-    try {
+    try
+    {
         c.loops = j.at("loops").get<std::vector<Loop>>();
         c.numLoops = j.at("numLoops").get<unsigned>();
-    } catch (std::exception &e) {
+    }
+    catch (std::exception &e)
+    {
         c.loops = std::vector<Loop>();
         c.numLoops = 0;
     }
@@ -285,25 +351,29 @@ void mck::from_json(const nlohmann::json &j, PlayerChannel &c)
 }
 
 // REVERB
-void mck::to_json(nlohmann::json &j, const mck::Reverb &r) {
+void mck::to_json(nlohmann::json &j, const mck::Reverb &r)
+{
     j["rt60"] = r.rt60;
     j["gain"] = r.gain;
     j["type"] = r.type;
 }
-void mck::from_json(const nlohmann::json &j, mck::Reverb &r) {
+void mck::from_json(const nlohmann::json &j, mck::Reverb &r)
+{
     r.rt60 = j.at("rt60").get<double>();
     r.gain = j.at("gain").get<double>();
     r.type = j.at("type").get<unsigned>();
 }
 
 // DELAY
-void mck::to_json(nlohmann::json &j, const Delay &d) {
+void mck::to_json(nlohmann::json &j, const Delay &d)
+{
     j["gain"] = d.gain;
     j["delay"] = d.delay;
     j["feedback"] = d.feedback;
     j["type"] = d.type;
 }
-void mck::from_json(const nlohmann::json &j, Delay &d) {
+void mck::from_json(const nlohmann::json &j, Delay &d)
+{
     d.gain = j.at("gain").get<double>();
     d.delay = j.at("delay").get<double>();
     d.feedback = j.at("feedback").get<double>();
@@ -326,44 +396,71 @@ void mck::to_json(nlohmann::json &j, const Config &c)
     j["reverb"] = c.reverb;
     j["delay"] = c.delay;
     j["controls"] = c.controls;
+    j["channelControls"] = c.channelControls;
 }
 void mck::from_json(const nlohmann::json &j, Config &c)
 {
     c.channels = j.at("channels").get<std::vector<Channel>>();
     c.channelCount = j.at("channelCount").get<unsigned>();
     c.gain = j.at("gain").get<double>();
-    try {
+    try
+    {
         c.clockSource = j.at("clockSource").get<std::vector<std::string>>();
-    } catch (std::exception &e) {
+    }
+    catch (std::exception &e)
+    {
         c.clockSource = std::vector<std::string>();
     }
-    try {
+    try
+    {
         c.clockTarget = j.at("clockTarget").get<std::vector<std::string>>();
-    } catch (std::exception &e) {
+    }
+    catch (std::exception &e)
+    {
         c.clockTarget = std::vector<std::string>();
     }
-    try {
+    try
+    {
         c.controlSource = j.at("controlSource").get<std::vector<std::string>>();
-    } catch (std::exception &e) {
+    }
+    catch (std::exception &e)
+    {
         c.controlSource = std::vector<std::string>();
     }
-    try {
+    try
+    {
         c.controlTarget = j.at("controlTarget").get<std::vector<std::string>>();
-    } catch (std::exception &e) {
+    }
+    catch (std::exception &e)
+    {
         c.controlTarget = std::vector<std::string>();
     }
     c.targetLeft = j.at("targetLeft").get<std::vector<std::string>>();
     c.targetRight = j.at("targetRight").get<std::vector<std::string>>();
     c.reverb = j.at("reverb").get<Reverb>();
     c.delay = j.at("delay").get<Delay>();
-    try {
+    try
+    {
         c.player = j.at("player").get<PlayerChannel>();
-    } catch (std::exception &e) {
+    }
+    catch (std::exception &e)
+    {
         c.player = PlayerChannel();
     }
-    try {
+    try
+    {
         c.controls = j.at("controls").get<Controls>();
-    } catch (std::exception &e) {
+    }
+    catch (std::exception &e)
+    {
         c.controls = Controls();
+    }
+    try
+    {
+        c.channelControls = j.at("channelControls").get<ChannelControls>();
+    }
+    catch (std::exception &e)
+    {
+        c.channelControls = ChannelControls();
     }
 }

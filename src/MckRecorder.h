@@ -9,7 +9,7 @@
 #include <mutex>
 #include <condition_variable>
 
-#include "MckTypes.h"
+#include "MckTypes.hpp"
 
 namespace mck {
     #define RECORDER_BUFFER_LEN_S 5

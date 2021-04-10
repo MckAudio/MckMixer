@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MckTypes.h"
+#include "MckTypes.hpp"
 #include "MckDelay.h"
 #include "MckRecorder.h"
 #include "DspHelper.hpp"
@@ -91,6 +91,7 @@ public:
     bool ApplyCommand(mck::ConnectionCommand cmd, mck::Config &outConfig);
     bool ApplyCommand(mck::LoopCommand &cmd);
     bool ApplyCommand(mck::TransportCommand &cmd);
+    bool ApplyCommand(mck::ChannelControlCommand &cmd);
 
     void ProcessAudio(jack_nframes_t nframes);
 

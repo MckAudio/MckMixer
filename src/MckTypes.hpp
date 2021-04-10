@@ -172,6 +172,7 @@ namespace mck
 
     struct MidiControl
     {
+        bool learn;
         bool set;
         // RAW
         unsigned char head;
@@ -179,7 +180,14 @@ namespace mck
         // INTERMEDIATE
         unsigned char chan;
         unsigned char type;
-        MidiControl() : set(false), head(0), data(0), chan(0), type(0) {}
+        MidiControl()
+            : learn(false),
+              set(false),
+              head(0),
+              data(0),
+              chan(0),
+              type(0) {}
+        bool operator==(const MidiControl &m);
     };
     void to_json(nlohmann::json &j, const MidiControl &m);
     void from_json(const nlohmann::json &j, MidiControl &m);
@@ -207,6 +215,57 @@ namespace mck
     };
     void to_json(nlohmann::json &j, const Controls &c);
     void from_json(const nlohmann::json &j, Controls &c);
+
+    enum ChannelControlEnum
+    {
+        CCT_NOTHING = 0,
+        CCT_PREV_CHANNEL,
+        CCT_NEXT_CHANNEL,
+        CCT_LOOP_RECORD,
+        CCT_LOOP_START,
+        CCT_LOOP_STOP
+    };
+
+    enum ChannelControlCommandEnum
+    {
+        CCC_NOTHING,
+        CCC_LEARN,
+        CCC_STOP,
+        CCC_CLEAR,
+        CCC_LENGTH
+    };
+
+    struct ChannelControlCommand
+    {
+        char cmd;
+        unsigned type;
+        ChannelControlCommand() : cmd(CC_NOTHING), type(CCT_NOTHING) {}
+    };
+    void to_json(nlohmann::json &j, const ChannelControlCommand &c);
+    void from_json(const nlohmann::json &j, ChannelControlCommand &c);
+
+    struct ChannelControls
+    {
+        bool learn;
+        unsigned activeChannel;
+        MidiControl prevChannel;
+        MidiControl nextChannel;
+        MidiControl loopRecord;
+        MidiControl loopStart;
+        MidiControl loopStop;
+        ChannelControls()
+            : learn(false),
+              activeChannel(0),
+              prevChannel(),
+              nextChannel(),
+              loopRecord(),
+              loopStart(),
+              loopStop()
+        {
+        }
+    };
+    void to_json(nlohmann::json &j, const ChannelControls &c);
+    void from_json(const nlohmann::json &j, ChannelControls &c);
 
     //   CONTROL <<//
 
@@ -326,7 +385,23 @@ namespace mck
         Reverb reverb;
         Delay delay;
         Controls controls;
-        Config() : gain(0.0), gainLin(1.0), clockSource(), clockTarget(), controlSource(), controlTarget(), targetLeft(), targetRight(), channels(), channelCount(0), player(), reverb(), delay(), controls(){};
+        ChannelControls channelControls;
+        Config()
+            : gain(0.0),
+              gainLin(1.0),
+              clockSource(),
+              clockTarget(),
+              controlSource(),
+              controlTarget(),
+              targetLeft(),
+              targetRight(),
+              channels(),
+              channelCount(0),
+              player(),
+              reverb(),
+              delay(),
+              controls(),
+              channelControls(){};
     };
     void to_json(nlohmann::json &j, const Config &c);
     void from_json(const nlohmann::json &j, Config &c);

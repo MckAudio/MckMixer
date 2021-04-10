@@ -609,6 +609,43 @@ bool mck::Mixer::ApplyCommand(mck::TransportCommand &cmd)
     return m_trans.ApplyCommand(cmd);
 }
 
+bool mck::Mixer::ApplyCommand(mck::ChannelControlCommand &cmd)
+{
+    mck::Config config;
+    mck::Channel chan;
+
+    GetConfig(config);
+
+    switch (cmd.cmd)
+    {
+    case CCC_LEARN:
+        config.channelControls.learn = true;
+        switch (cmd.type)
+        {
+        case CCT_PREV_CHANNEL:
+            config.channelControls.prevChannel.learn = true;
+            break;
+        case CCT_NEXT_CHANNEL:
+            config.channelControls.nextChannel.learn = true;
+            break;
+        default:
+            break;
+        }
+        break;
+    default:
+        break;
+    }
+
+    bool ret = SetConfig(config);
+
+    if (ret == false)
+    {
+        GetConfig(config);
+    }
+
+    return ret;
+}
+
 void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
 {
     char phase = m_phase.load();
@@ -637,11 +674,15 @@ void mck::Mixer::ProcessAudio(jack_nframes_t nframes)
     if (phase == PROC_UPDATING)
     {
         updateConfig = true;
-        m_control.ProcessMidi(m_midiCtrlIn, m_midiCtrlOut, nframes, m_config[m_newConfig], updateConfig, ctrlState);
+        //m_control.ProcessMidi(m_midiCtrlIn, m_midiCtrlOut, nframes, m_config[m_newConfig], updateConfig, ctrlState);
+        // Channel Controls
+        m_control.Process(m_midiCtrlIn, m_midiCtrlOut, nframes, m_config[m_newConfig], updateConfig);
     }
     else if (phase == PROC_NORMAL)
     {
-        m_control.ProcessMidi(m_midiCtrlIn, m_midiCtrlOut, nframes, m_config[m_newConfig], updateConfig, ctrlState);
+        //m_control.ProcessMidi(m_midiCtrlIn, m_midiCtrlOut, nframes, m_config[m_newConfig], updateConfig, ctrlState);
+        // Channel Controls
+        m_control.Process(m_midiCtrlIn, m_midiCtrlOut, nframes, m_config[m_newConfig], updateConfig);
         if (updateConfig)
         {
             // Handle new values
@@ -1106,7 +1147,19 @@ void mck::Mixer::ReceiveMessage(Message &msg)
     }
     else if (msg.msgType == "command")
     {
-        if (msg.section == "recording")
+        if (msg.section == "control")
+        {
+            try
+            {
+                mck::ChannelControlCommand cmd = json::parse(msg.data);
+                ApplyCommand(cmd);
+            }
+            catch (std::exception &e)
+            {
+                std::fprintf(stderr, "Failed to read channel control command: %s\n", e.what());
+            }
+        }
+        else if (msg.section == "recording")
         {
             if (msg.data == "start")
             {
