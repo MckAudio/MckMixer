@@ -215,12 +215,16 @@ bool mck::Looper::ApplyCommand(LoopCommand &cmd, bool isStereo = false)
         }
         break;
     case LOOP_STOP:
+        if (cmd.loopIdx > m_loops.size())
+        {
+            return false;
+        }
         if (state == LS_RECORD || state == LS_SHOULD_RECORD)
         {
             m_state = LS_SHOULD_STOP_RECORD;
             return true;
         }
-        else if (state = LS_PLAY || state == LS_SHOULD_PLAY)
+        else if (state == LS_PLAY || state == LS_SHOULD_PLAY)
         {
             m_state = LS_SHOULD_STOP_PLAY;
             return true;

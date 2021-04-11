@@ -226,14 +226,18 @@ void mck::from_json(const nlohmann::json &j, ChannelControlCommand &c)
 void mck::to_json(nlohmann::json &j, const ChannelControls &c)
 {
     j["learn"] = c.learn;
+    j["activeMaster"] = c.activeMaster;
     j["activeChannel"] = c.activeChannel;
+    j["activeGainCtrl"] = c.activeGainCtrl;
     j["controls"] = c.controls;
     j["names"] = c.names;
 }
 void mck::from_json(const nlohmann::json &j, ChannelControls &c)
 {
     c.learn = j.at("learn").get<bool>();
+    c.activeMaster = j.at("activeMaster").get<bool>();
     c.activeChannel = j.at("activeChannel").get<unsigned>();
+    c.activeGainCtrl = j.at("activeGainCtrl").get<unsigned>();
     c.controls = j.at("controls").get<std::vector<MidiControl>>();
     c.names = j.at("names").get<std::vector<std::string>>();
 }

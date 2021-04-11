@@ -104,7 +104,10 @@ import ControlSettings from "./ControlSettings.svelte";
 
 <div class="base">
   {#if dataReady}
-    <div class="settings">
+    <div class="header">
+      
+    </div>
+    <div class="settings {data.channelControls.activeMaster ? 'active' : ''}">
       <Settings
         {rtData}
         {data}
@@ -117,7 +120,8 @@ import ControlSettings from "./ControlSettings.svelte";
     <div class="channels">
       {#each data.channels as chan, i}
         <Channel
-          active={data.channelControls.activeChannel == i}
+          active={data.channelControls.activeChannel == i && data.channelControls.activeMaster == false}
+          highlight={data.channelControls.activeChannel == i}
           index={i}
           data={chan}
           {SendMsg}
@@ -169,17 +173,24 @@ import ControlSettings from "./ControlSettings.svelte";
     height: 100%;
     display: grid;
     grid-template-columns: min-content 1fr auto auto;
+    grid-template-rows: auto 1fr;
     /*grid-row-gap: 1px;
     grid-column-gap: 1px;*/
     background-color: #333;
+  }
+  .header {
+    grid-column: 1/-1;;
   }
   .settings {
     grid-column: 1/2;
     overflow-y: auto;
     padding: 8px;
-    background-color: #f0f0f0;
+    background-color: var(--bg-color);
     z-index: 10;
-    box-shadow: 1px 0px 4px 1px #555;
+    box-shadow: 1px 0px 4px 1px var(--shadow-color);
+  }
+  .settings.active {
+    background-color: #f0d000;
   }
   .channels {
     grid-column: 2/3;
@@ -192,7 +203,7 @@ import ControlSettings from "./ControlSettings.svelte";
     display: grid;
     /*grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));*/
     grid-auto-flow: column;
-    grid-auto-columns: 140px; /*minmax(140px, max-content);*/
+    grid-auto-columns: 150px; /*minmax(140px, max-content);*/
     grid-template-rows: 1fr;
     /*
     grid-auto-columns: min-content;

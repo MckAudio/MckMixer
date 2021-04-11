@@ -20,6 +20,7 @@
   export let meter = undefined;
   export let looper = undefined;
   export let active = false;
+  export let highlight = false;
 
   const state = [
     "Idle",
@@ -69,7 +70,7 @@
   }
 </script>
 
-<div class="base {active ? 'active' : ''}">
+<div class="base {active ? 'active' : highlight ? 'highlight' : ''}">
   <i>{index + 1}</i>
   <InputText value={data.name} Handler={(_v) => SendValue("name", _v)} />
   {#if meter != undefined}
@@ -236,10 +237,11 @@
 
 <style>
   .base {
-    background-color: #e0e0e0;
+    background-color: var(--bg2-color);
+    border: 1px solid var(--border-light-color);
     padding: 4px;
-    width: calc(100% - 8px);
-    height: calc(100% - 8px);
+    width: calc(100% - 10px);
+    height: calc(100% - 10px);
     display: grid;
     grid-auto-rows: min-content; /*minmax(min-content, max-content);*/
     grid-gap: 4px;
@@ -248,6 +250,10 @@
 
   .base.active {
     background-color: #f0d000;
+  }
+
+  .base.highlight, .base.active {
+    border-color: #d0a000;
   }
 
   .base > i,

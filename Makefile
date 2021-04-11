@@ -12,7 +12,6 @@ LMINCS += -I./src/gui -I./src/gui/json/include
 LMLIBS = -L/usr/local/lib -lfreeverb3 -ljack -lz -lsndfile -lpthread
 LMLIBS += `pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0`
 
-
 release:
 	mkdir -p bin/release
 	g++ $(REL_FLAGS) --std=c++17 $(LMINCS) $(LSRCS) -o ./bin/release/mck-mixer $(LMLIBS)
@@ -24,6 +23,9 @@ production:
 debug:
 	mkdir -p ./bin/debug
 	g++ $(DEB_FLAGS) --std=c++17 $(LMINCS) $(LSRCS) -o ./bin/debug/mck-mixer $(LMLIBS)
+
+run:
+	WEBKIT_INSPECTOR_SERVER=127.0.0.1:1234 ./bin/release/mck-mixer
 
 install: gui production
 	mkdir -p /usr/share/mck-mixer/gui/

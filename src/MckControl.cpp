@@ -1,10 +1,13 @@
 #include "MckControl.h"
 #include "MckLooper.h"
+#include <Transport.hpp>
 
 mck::Control::Control()
     : m_isInitialized(true),
-      m_looper()
+      m_looper(),
+      m_trans(nullptr)
 {
+    m_looper.clear();
 }
 
 bool mck::Control::ProcessMidi(jack_port_t *inPort, jack_port_t *outPort, jack_nframes_t nframes, Config &config, bool &configChanged, ControlState &state)
@@ -166,6 +169,11 @@ void mck::Control::AddLooper(Looper *looper)
     m_looper.push_back(looper);
 }
 
+void mck::Control::SetTransport(Transport *trans)
+{
+    m_trans = trans;
+}
+
 bool mck::Control::Process(jack_port_t *inPort, jack_port_t *outPort, jack_nframes_t nframes, Config &config, bool &configChanged)
 {
     void *inBuffer = jack_port_get_buffer(inPort, nframes);
@@ -207,6 +215,12 @@ bool mck::Control::Process(jack_port_t *inPort, jack_port_t *outPort, jack_nfram
         ctrl.data = midiEvent.buffer[1];
         ctrl.set = true;
 
+        double value = 0.0;
+        if (ctrl.head == 0xB0)
+        {
+            value = (double)midiEvent.buffer[2] / 127.0;
+        }
+
         if (config.channelControls.learn)
         {
             if (ctrl.head != 0x80 && ctrl.head != 0x90 && ctrl.head != 0xB0)
@@ -237,21 +251,69 @@ bool mck::Control::Process(jack_port_t *inPort, jack_port_t *outPort, jack_nfram
                     switch (i)
                     {
                     case CCT_PREV_CHANNEL:
-                        if (idx > 0)
-                        {
-                            config.channelControls.activeChannel -= 1;
-                            configChanged = true;
-                        }
+                        config.channelControls.activeMaster = false;
+                        config.channelControls.activeChannel = (unsigned)(((int)config.channelControls.activeChannel - 1) % config.channelCount);
+                        configChanged = true;
                         break;
                     case CCT_NEXT_CHANNEL:
-                        if (config.channelCount > 1 && idx < config.channelCount - 1)
+                        config.channelControls.activeMaster = false;
+                        config.channelControls.activeChannel = (config.channelControls.activeChannel + 1) % config.channelCount;
+                        configChanged = true;
+                        break;
+                    case CCT_TOGGLE_MASTER:
+                        config.channelControls.activeMaster = !config.channelControls.activeMaster;
+                        configChanged = true;
+                        break;
+                    case CCT_PREV_GAIN:
+                        config.channelControls.activeGainCtrl = (unsigned)(((int)config.channelControls.activeGainCtrl - 1) % GCT_LENGTH);
+                        configChanged = true;
+                        break;
+                    case CCT_NEXT_GAIN:
+                        config.channelControls.activeGainCtrl = (unsigned)(((int)config.channelControls.activeGainCtrl + 1) % GCT_LENGTH);
+                        configChanged = true;
+                        break;
+                    case CCT_GAIN_CTRL:
+                        switch (config.channelControls.activeGainCtrl)
                         {
-                            config.channelControls.activeChannel += 1;
+                        case GCT_GAIN:
+                            config.channels[idx].gain = LogToDb(value);
+                            config.channels[idx].gainLin = DbToLin(config.channels[idx].gain);
                             configChanged = true;
+                            break;
+                        case GCT_PAN:
+                            config.channels[idx].pan = value * 100.0;
+                            configChanged = true;
+                            break;
+                        case GCT_LOOP:
+                            config.channels[idx].loopGain = LogToDb(value);
+                            config.channels[idx].loopGainLin = DbToLin(config.channels[idx].loopGain);
+                            configChanged = true;
+                            break;
+                        case GCT_INPUT:
+                            config.channels[idx].inputGain = LogToDb(value);
+                            config.channels[idx].inputGainLin = DbToLin(config.channels[idx].inputGain);
+                            configChanged = true;
+                            break;
+                        case GCT_REVERB:
+                            config.channels[idx].sendReverb = LogToDb(value);
+                            config.channels[idx].sendReverbLin = DbToLin(config.channels[idx].sendReverb);
+                            configChanged = true;
+                            break;
+                        case GCT_DELAY:
+                            config.channels[idx].sendDelay = LogToDb(value);
+                            config.channels[idx].sendDelayLin = DbToLin(config.channels[idx].sendDelay);
+                            configChanged = true;
+                            break;
+                        default:
+                            break;
                         }
                         break;
                     case CCT_LOOP_RECORD:
-                        if (idx < m_looper.size() && m_looper[idx] != nullptr)
+                        if (config.channelControls.activeMaster)
+                        {
+
+                        }
+                        else if (idx < m_looper.size() && m_looper[idx] != nullptr)
                         {
                             LoopCommand cmd;
                             cmd.chanIdx = idx;
@@ -261,7 +323,16 @@ bool mck::Control::Process(jack_port_t *inPort, jack_port_t *outPort, jack_nfram
                         }
                         break;
                     case CCT_LOOP_START:
-                        if (idx < m_looper.size() && m_looper[idx] != nullptr)
+                        if (config.channelControls.activeMaster)
+                        {
+                            TransportCommand cmd;
+                            cmd.mode = TC_START;
+                            if (m_trans != nullptr)
+                            {
+                                m_trans->ApplyCommand(cmd);
+                            }
+                        }
+                        else if (idx < m_looper.size() && m_looper[idx] != nullptr)
                         {
                             LoopCommand cmd;
                             cmd.chanIdx = idx;
@@ -271,7 +342,16 @@ bool mck::Control::Process(jack_port_t *inPort, jack_port_t *outPort, jack_nfram
                         }
                         break;
                     case CCT_LOOP_STOP:
-                        if (idx < m_looper.size() && m_looper[idx] != nullptr)
+                        if (config.channelControls.activeMaster)
+                        {
+                            TransportCommand cmd;
+                            cmd.mode = TC_STOP;
+                            if (m_trans != nullptr)
+                            {
+                                m_trans->ApplyCommand(cmd);
+                            }
+                        }
+                        else if (idx < m_looper.size() && m_looper[idx] != nullptr)
                         {
                             LoopCommand cmd;
                             cmd.chanIdx = idx;

@@ -118,6 +118,7 @@ bool mck::Mixer::Init(std::string path)
 
     // Transport
     m_trans.Init(m_sampleRate, m_bufferSize, 120.0);
+    m_control.SetTransport(&m_trans);
 
     // Looper
     for (unsigned i = 0; i < MCK_MIXER_MAX_INPUTS; i++)
@@ -268,6 +269,10 @@ bool mck::Mixer::SetConfig(mck::Config &config)
         config.channelControls.names.resize(CCT_LENGTH);
         config.channelControls.names[CCT_PREV_CHANNEL] = "Previous Channel";
         config.channelControls.names[CCT_NEXT_CHANNEL] = "Next Channel";
+        config.channelControls.names[CCT_TOGGLE_MASTER] = "Toggle Master";
+        config.channelControls.names[CCT_PREV_GAIN] = "Previous Gain Ctrl";
+        config.channelControls.names[CCT_NEXT_GAIN] = "Next Gain Ctrl";
+        config.channelControls.names[CCT_GAIN_CTRL] = "Gain Ctrl";
         config.channelControls.names[CCT_LOOP_RECORD] = "Loop Record";
         config.channelControls.names[CCT_LOOP_START] = "Loop Start";
         config.channelControls.names[CCT_LOOP_STOP] = "Loop Stop";

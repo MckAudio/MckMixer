@@ -216,10 +216,25 @@ namespace mck
     void to_json(nlohmann::json &j, const Controls &c);
     void from_json(const nlohmann::json &j, Controls &c);
 
+    enum GainControlEnum
+    {
+        GCT_GAIN = 0,
+        GCT_PAN,
+        GCT_REVERB,
+        GCT_DELAY,
+        GCT_INPUT,
+        GCT_LOOP,
+        GCT_LENGTH
+    };
+
     enum ChannelControlEnum
     {
         CCT_PREV_CHANNEL = 0,
         CCT_NEXT_CHANNEL,
+        CCT_TOGGLE_MASTER,
+        CCT_PREV_GAIN,
+        CCT_NEXT_GAIN,
+        CCT_GAIN_CTRL,
         CCT_LOOP_RECORD,
         CCT_LOOP_START,
         CCT_LOOP_STOP,
@@ -247,12 +262,16 @@ namespace mck
     struct ChannelControls
     {
         bool learn;
+        bool activeMaster;
         unsigned activeChannel;
+        unsigned activeGainCtrl;
         std::vector<MidiControl> controls;
         std::vector<std::string> names;
         ChannelControls()
             : learn(false),
+              activeMaster(false),
               activeChannel(0),
+              activeGainCtrl(GCT_GAIN),
               controls(),
               names()
         {
@@ -262,7 +281,6 @@ namespace mck
     void from_json(const nlohmann::json &j, ChannelControls &c);
 
     //   CONTROL <<//
-
     struct RealTimeData
     {
         ControlState control;

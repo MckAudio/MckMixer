@@ -7,6 +7,7 @@
   import ControlSettings from "./ControlSettings.svelte";
   import { DbToLog, LogToDb, FormatCon } from "./mck/utils/Tools.svelte";
 
+  export let active = false;
   export let data = undefined;
   export let rtData = undefined;
   export let SendValue = undefined;
@@ -60,8 +61,8 @@
   }
 </script>
 
-<div class="base">
-  <h1>MCK Mixer</h1>
+<div class="base {active ? 'active' : ''}">
+  <h1>MckMixer</h1>
   <div class="control">
     <i>New Channel:</i>
     <div class="splitter">
@@ -212,6 +213,9 @@
     font-family: mck-lato;
     row-gap: 4px;
     grid-row-gap: 4px;
+  }
+  .base.active {
+    background-color: #f0d000;
   }
   h1 {
     font-size: 18px;

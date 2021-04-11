@@ -24,12 +24,14 @@
             <div class="table">
                 <div />
                 <i>Active:</i>
+                <i>Channel:</i>
                 <i>Ctrl:</i>
                 <i>Type:</i>
                 <i>Actions:</i>
                 {#each data.controls as control, i}
                     <div class="name">{data.names[i]}:</div>
                     <Button value={control.set}>Set</Button>
+                    <InputNumber value={control.chan}/>
                     <InputNumber value={control.head}/>
                     <InputNumber value={control.data}/>
                     <div class="gridder">
@@ -96,7 +98,7 @@
         width: 100%;
         height: 100%;
         display: grid;
-        grid-template-columns: repeat(5, min-content);
+        grid-template-columns: repeat(6, min-content);
         grid-auto-rows: auto;
         grid-gap: 8px;
     }

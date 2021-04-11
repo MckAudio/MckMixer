@@ -11,6 +11,7 @@
 namespace mck
 {
     class Looper;
+    class Transport;
 
     class Control
     {
@@ -24,10 +25,12 @@ namespace mck
         bool ApplyCommand(ChannelControlCommand &cmd);
 
         void AddLooper(Looper *looper);
+        void SetTransport(Transport *trans);
     private:
         void ApplyDataChanges(void *outBuf, Config &config);
         bool m_isInitialized;
         ControlState m_state;
         std::vector<Looper *> m_looper;
+        Transport *m_trans;
     };
 }; // namespace mck
