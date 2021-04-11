@@ -227,23 +227,16 @@ void mck::to_json(nlohmann::json &j, const ChannelControls &c)
 {
     j["learn"] = c.learn;
     j["activeChannel"] = c.activeChannel;
-    j["prevChannel"] = c.prevChannel;
-    j["nextChannel"] = c.nextChannel;
-    j["loopRecord"] = c.loopRecord;
-    j["loopStart"] = c.loopStart;
-    j["loopStop"] = c.loopStop;
+    j["controls"] = c.controls;
+    j["names"] = c.names;
 }
 void mck::from_json(const nlohmann::json &j, ChannelControls &c)
 {
     c.learn = j.at("learn").get<bool>();
     c.activeChannel = j.at("activeChannel").get<unsigned>();
-    c.prevChannel = j.at("prevChannel").get<MidiControl>();
-    c.nextChannel = j.at("nextChannel").get<MidiControl>();
-    c.loopRecord = j.at("loopRecord").get<MidiControl>();
-    c.loopStart = j.at("loopStart").get<MidiControl>();
-    c.loopStop = j.at("loopStop").get<MidiControl>();
+    c.controls = j.at("controls").get<std::vector<MidiControl>>();
+    c.names = j.at("names").get<std::vector<std::string>>();
 }
-
 // REAL TIME DATA
 void mck::to_json(nlohmann::json &j, const RealTimeData &r)
 {

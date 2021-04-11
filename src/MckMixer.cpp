@@ -123,6 +123,7 @@ bool mck::Mixer::Init(std::string path)
     for (unsigned i = 0; i < MCK_MIXER_MAX_INPUTS; i++)
     {
         m_inputDsp[i].looper.Init(m_sampleRate, m_bufferSize, &m_trans);
+        m_control.AddLooper(&m_inputDsp[i].looper);
     }
 
     // Read Configuration
@@ -256,6 +257,21 @@ bool mck::Mixer::SetConfig(mck::Config &config)
 
     unsigned nChans = 0;
     m_newConfig = 1 - m_activeConfig;
+
+    // Check Channel Controls
+    if (config.channelControls.controls.size() != CCT_LENGTH)
+    {
+        config.channelControls.controls.resize(CCT_LENGTH);
+    }
+    if (config.channelControls.names.size() != CCT_LENGTH)
+    {
+        config.channelControls.names.resize(CCT_LENGTH);
+        config.channelControls.names[CCT_PREV_CHANNEL] = "Previous Channel";
+        config.channelControls.names[CCT_NEXT_CHANNEL] = "Next Channel";
+        config.channelControls.names[CCT_LOOP_RECORD] = "Loop Record";
+        config.channelControls.names[CCT_LOOP_START] = "Loop Start";
+        config.channelControls.names[CCT_LOOP_STOP] = "Loop Stop";
+    }
 
     // Convert Gain dB to lin
     config.gainLin = mck::DbToLin(config.gain);
@@ -616,24 +632,26 @@ bool mck::Mixer::ApplyCommand(mck::ChannelControlCommand &cmd)
 
     GetConfig(config);
 
+    if (cmd.cmd >= CCC_LENGTH || cmd.type >= CCT_LENGTH)
+    {
+        return false;
+    }
+
     switch (cmd.cmd)
     {
     case CCC_LEARN:
         config.channelControls.learn = true;
-        switch (cmd.type)
-        {
-        case CCT_PREV_CHANNEL:
-            config.channelControls.prevChannel.learn = true;
-            break;
-        case CCT_NEXT_CHANNEL:
-            config.channelControls.nextChannel.learn = true;
-            break;
-        default:
-            break;
-        }
+        config.channelControls.controls[cmd.type].learn = true;
+        break;
+    case CCC_STOP:
+        config.channelControls.learn = false;
+        config.channelControls.controls[cmd.type].learn = false;
+        break;
+    case CCC_CLEAR:
+        config.channelControls.controls[cmd.type] = MidiControl();
         break;
     default:
-        break;
+        return true;
     }
 
     bool ret = SetConfig(config);

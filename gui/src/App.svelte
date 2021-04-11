@@ -1,12 +1,14 @@
 <script>
   import { onMount, onDestroy } from "svelte";
-  import { DbToLog, LogToDb } from "../MckSvelte/utils/Tools.svelte";
+  import { DbToLog, LogToDb } from "./mck/utils/Tools.svelte";
   import Settings from "./Settings.svelte";
-  import Slider from "../MckSvelte/controls/Slider.svelte";
-  import SliderLabel from "../MckSvelte/controls/SliderLabel.svelte";
+  import Slider from "./mck/controls/Slider.svelte";
+  import SliderLabel from "./mck/controls/SliderLabel.svelte";
+  import Modal from "./mck/container/Modal.svelte";
   import Channel from "./Channel.svelte";
   import ReverbSend from "./ReverbSend.svelte";
   import DelaySend from "./DelaySend.svelte";
+import ControlSettings from "./ControlSettings.svelte";
 
   let port = 9001;
   let socket = undefined;
@@ -14,11 +16,14 @@
   let pingId = -1;
   let gain = 0.0;
   let data = undefined;
+  let dataReady = false;
   let sources = [];
   let targets = [];
 
   let revTypes = ["STREV", "PROG2", "ZREV2", "NREVB"];
   let rtData = {};
+
+  let showControlSettings = false;
 
   function SendValue(_idx, _section, _type, _val) {
     let _data = JSON.parse(JSON.stringify(data));
@@ -46,6 +51,7 @@
     if (_event.detail.msgType == "partial") {
       if (_event.detail.section == "config") {
         data = _event.detail.data;
+        dataReady = true;
       } else if (_event.detail.section == "source") {
         sources = _event.detail.data;
       } else if (_event.detail.section == "target") {
@@ -97,7 +103,7 @@
 </script>
 
 <div class="base">
-  {#if data != undefined}
+  {#if dataReady}
     <div class="settings">
       <Settings
         {rtData}
@@ -105,6 +111,7 @@
         SendValue={(t, v) => SendValue(0, "master", t, v)}
         {SendMsg}
         {targets}
+        bind:showControlSettings
       />
     </div>
     <div class="channels">
@@ -149,6 +156,12 @@
     -->
   {/if}
 </div>
+
+{#if showControlSettings && dataReady}
+  <Modal title="Channel Control Settings" bind:show={showControlSettings}>
+    <ControlSettings data={data.channelControls} {SendMsg}/>
+    </Modal>
+{/if}
 
 <style>
   .base {

@@ -1,9 +1,11 @@
 <script>
-  import SliderLabel from "../MckSvelte/controls/SliderLabel.svelte";
-  import Select from "../MckSvelte/controls/Select.svelte";
-  import Button from "../MckSvelte/controls/Button.svelte";
-  import Meter from "../MckSvelte/controls/Meter.svelte";
-  import { DbToLog, LogToDb, FormatCon } from "../MckSvelte/utils/Tools.svelte";
+  import SliderLabel from "./mck/controls/SliderLabel.svelte";
+  import Select from "./mck/controls/Select.svelte";
+  import Button from "./mck/controls/Button.svelte";
+  import Meter from "./mck/controls/Meter.svelte";
+  import Modal from "./mck/container/Modal.svelte";
+  import ControlSettings from "./ControlSettings.svelte";
+  import { DbToLog, LogToDb, FormatCon } from "./mck/utils/Tools.svelte";
 
   export let data = undefined;
   export let rtData = undefined;
@@ -12,12 +14,13 @@
   export let targets = [];
 
   let tempo = 120;
+  export let showControlSettings = false;
 
   function AddChannel(_isStereo) {
     let _data = JSON.stringify({
       command: "add",
       isStereo: _isStereo,
-      idx: 0
+      idx: 0,
     });
 
     if (SendMsg) {
@@ -30,7 +33,7 @@
       idx: 0,
       subIdx: _rightChannel ? 1 : 0,
       command: _target == "disconnect" ? "disconnect" : "connect",
-      target: _target
+      target: _target,
     });
     if (SendMsg) {
       SendMsg("command", "connection", _data);
@@ -39,25 +42,16 @@
   function SendTransCmd(_cmd) {
     let _data = JSON.stringify({
       mode: _cmd,
-      tempo: 0.0
+      tempo: 0.0,
     });
     if (SendMsg) {
       SendMsg("command", "transport", _data);
     }
   }
-  function SendCtrlCmd(_idx, _cmd) {
-    let _data = JSON.stringify({
-      cmd: _cmd + 1,
-      type: _idx + 1
-    });
-    if (SendMsg) {
-      SendMsg("command", "control", _data);
-    }
-  }
   function ChangeTempo(_tempo) {
     let _data = JSON.stringify({
       mode: 4,
-      tempo: _tempo
+      tempo: _tempo,
     });
     if (SendMsg) {
       SendMsg("command", "transport", _data);
@@ -65,6 +59,150 @@
     }
   }
 </script>
+
+<div class="base">
+  <h1>MCK Mixer</h1>
+  <div class="control">
+    <i>New Channel:</i>
+    <div class="splitter">
+      <Button Handler={() => AddChannel(false)}>Mono</Button>
+      <Button Handler={() => AddChannel(true)}>Stereo</Button>
+    </div>
+  </div>
+  <!-- TARGET -->
+  <div class="control">
+    <i>Left Output Target:</i>
+    <Select
+      items={targets}
+      value={data.targetLeft}
+      numeric={false}
+      Opener={() => SendMsg("request", "target", "")}
+      Handler={(_v) => ConnectMaster(_v, false)}
+      Formatter={FormatCon}
+    />
+  </div>
+  <div class="control">
+    <i>Right Output Target:</i>
+    <Select
+      items={targets}
+      value={data.targetRight}
+      numeric={false}
+      Opener={() => SendMsg("request", "target", "")}
+      Handler={(_v) => ConnectMaster(_v, true)}
+      Formatter={FormatCon}
+    />
+  </div>
+
+  <!-- METER -->
+  {#if rtData}
+    {#if rtData.hasOwnProperty("meterOut")}
+      <div class="control">
+        <i>Meter:</i>
+        <Meter stereo={true} value={rtData.meterOut} />
+      </div>
+    {/if}
+  {/if}
+
+  <!-- GAIN -->
+  <div class="control">
+    <i>Gain:</i>
+    <SliderLabel
+      label={Math.round(data.gain) + " dB"}
+      value={DbToLog(data.gain)}
+      Handler={(_v) => SendValue("gain", LogToDb(_v))}
+    />
+  </div>
+
+  <!-- RECORDING -->
+  {#if rtData}
+    {#if rtData.hasOwnProperty("rec")}
+      <div class="control">
+        <i>Recording:</i>
+        <div class="splitter">
+          <Button
+            disabled={rtData.rec.isActive}
+            Handler={() => {
+              SendMsg("command", "recording", "start");
+            }}
+          >
+            Start
+          </Button>
+          <Button
+            disabled={!rtData.rec.isActive}
+            Handler={() => {
+              SendMsg("command", "recording", "stop");
+            }}
+          >
+            Stop
+          </Button>
+        </div>
+      </div>
+      {#if rtData.rec.isActive}
+        <div class="control">
+          <i>Recorded Time:</i>
+          <span>
+            {`${rtData.rec.recHours
+              .toString()
+              .padStart(2, "0")}:${rtData.rec.recMins
+              .toString()
+              .padStart(2, "0")}:${rtData.rec.recSecs
+              .toString()
+              .padStart(2, "0")}.${rtData.rec.recMiSecs
+              .toString()
+              .padStart(3, "0")}`}
+          </span>
+        </div>
+      {/if}
+    {/if}
+  {/if}
+
+  <!-- TRANSPORT -->
+  {#if rtData}
+    {#if rtData.hasOwnProperty("trans")}
+      <div class="control">
+        <i>Transport:</i>
+        <div class="gritter">
+          <Button
+            disabled={rtData.trans.state == 1}
+            Handler={() => SendTransCmd(2)}>Start</Button
+          >
+          <Button
+            disabled={rtData.trans.state == 1}
+            Handler={() => SendTransCmd(3)}>Cont</Button
+          >
+          <Button
+            disabled={rtData.trans.state == 0}
+            Handler={() => SendTransCmd(1)}>Stop</Button
+          >
+        </div>
+      </div>
+      <div class="control">
+        <i>Tempo:</i>
+        <SliderLabel
+          label={rtData.trans.tempo.toFixed(2) + " bpm"}
+          value={(rtData.trans.tempo - 30.0) / 270.0}
+          Handler={(_v) => ChangeTempo(_v * 270.0 + 30)}
+        />
+      </div>
+      <div class="control">
+        <i>Position:</i>
+        <span
+          >{(rtData.trans.bar + 1).toString().padStart(4, "0") +
+            " - " +
+            (rtData.trans.beat + 1).toString() +
+            " / " +
+            rtData.trans.nBeats.toString()}</span
+        >
+      </div>
+    {/if}
+  {/if}
+
+  <!-- Control Settings -->
+  <div class="control">
+    <i>Controls:</i>
+    <Button value={showControlSettings} Handler={_v => {showControlSettings = _v;}}>Show Settings</Button>
+  </div>
+</div>
 
 <style>
   .base {
@@ -119,148 +257,3 @@
     cursor: pointer;
   }
 </style>
-
-<div class="base">
-  <h1>MCK Mixer</h1>
-  <div class="control">
-    <i>New Channel:</i>
-    <div class="splitter">
-      <Button Handler={() => AddChannel(false)}>Mono</Button>
-      <Button Handler={() => AddChannel(true)}>Stereo</Button>
-    </div>
-  </div>
-  <!-- TARGET -->
-  <div class="control">
-    <i>Left Output Target:</i>
-    <Select
-      items={targets}
-      value={data.targetLeft}
-      numeric={false}
-      Opener={() => SendMsg('request', 'target', '')}
-      Handler={_v => ConnectMaster(_v, false)}
-      Formatter={FormatCon} />
-  </div>
-  <div class="control">
-    <i>Right Output Target:</i>
-    <Select
-      items={targets}
-      value={data.targetRight}
-      numeric={false}
-      Opener={() => SendMsg('request', 'target', '')}
-      Handler={_v => ConnectMaster(_v, true)}
-      Formatter={FormatCon} />
-  </div>
-
-  <!-- METER -->
-  {#if rtData}
-    {#if rtData.hasOwnProperty('meterOut')}
-      <div class="control">
-        <i>Meter:</i>
-        <Meter stereo={true} value={rtData.meterOut} />
-      </div>
-    {/if}
-  {/if}
-
-  <!-- GAIN -->
-  <div class="control">
-    <i>Gain:</i>
-    <SliderLabel
-      label={Math.round(data.gain) + ' dB'}
-      value={DbToLog(data.gain)}
-      Handler={_v => SendValue('gain', LogToDb(_v))} />
-  </div>
-
-  <!-- RECORDING -->
-  {#if rtData}
-    {#if rtData.hasOwnProperty('rec')}
-      <div class="control">
-        <i>Recording:</i>
-        <div class="splitter">
-          <Button
-            disabled={rtData.rec.isActive}
-            Handler={() => {
-              SendMsg('command', 'recording', 'start');
-            }}>
-            Start
-          </Button>
-          <Button
-            disabled={!rtData.rec.isActive}
-            Handler={() => {
-              SendMsg('command', 'recording', 'stop');
-            }}>
-            Stop
-          </Button>
-        </div>
-      </div>
-      {#if rtData.rec.isActive}
-        <div class="control">
-          <i>Recorded Time:</i>
-          <span>
-            {`${rtData.rec.recHours
-              .toString()
-              .padStart(
-                2,
-                '0'
-              )}:${rtData.rec.recMins
-              .toString()
-              .padStart(
-                2,
-                '0'
-              )}:${rtData.rec.recSecs
-              .toString()
-              .padStart(
-                2,
-                '0'
-              )}.${rtData.rec.recMiSecs.toString().padStart(3, '0')}`}
-          </span>
-        </div>
-      {/if}
-    {/if}
-  {/if}
-
-  <!-- TRANSPORT -->
-  {#if rtData}
-    {#if rtData.hasOwnProperty("trans")}
-  <div class="control">
-    <i>Transport:</i>
-    <div class="gritter">
-      <Button disabled={rtData.trans.state == 1} Handler={()=>SendTransCmd(2)}>Start</Button>
-      <Button disabled={rtData.trans.state == 1} Handler={()=>SendTransCmd(3)}>Cont</Button>
-      <Button disabled={rtData.trans.state == 0} Handler={()=>SendTransCmd(1)}>Stop</Button>
-    </div>
-  </div>
-  <div class="control">
-    <i>Tempo:</i>
-    <SliderLabel
-      label={rtData.trans.tempo.toFixed(2) + ' bpm'}
-      value={(rtData.trans.tempo - 30.0)/ 270.0}
-      Handler={_v => ChangeTempo(_v * 270.0 + 30)} />
-  </div>
-  <div class="control">
-    <i>Position:</i>
-    <span>{(rtData.trans.bar + 1).toString().padStart(4, '0') + ' - ' +(rtData.trans.beat + 1).toString() + ' / ' + (rtData.trans.nBeats).toString()}</span>
-  </div>
-  {/if}
-  {/if}
-
-  <div class="control">
-    <i>Active Channel:</i>
-    <span>{data.channelControls.activeChannel}</span>
-  </div>
-  <div class="control">
-    <i>Prev Channel:</i>
-    <div class="gritter">
-      <Button disabled={data.channelControls.prevChannel.learn} Handler={()=>SendCtrlCmd(0, 0)}>Learn</Button>
-      <Button disabled={data.channelControls.prevChannel.learn === false} Handler={()=>SendCtrlCmd(0, 1)}>Stop</Button>
-      <Button disabled={data.channelControls.prevChannel.learn} Handler={()=>SendCtrlCmd(0, 2)}>Clear</Button>
-    </div>
-  </div>
-  <div class="control">
-    <i>Next Channel:</i>
-    <div class="gritter">
-      <Button disabled={data.channelControls.nextChannel.learn} Handler={()=>SendCtrlCmd(1, 0)}>Learn</Button>
-      <Button disabled={data.channelControls.nextChannel.learn === false} Handler={()=>SendCtrlCmd(1, 1)}>Stop</Button>
-      <Button disabled={data.channelControls.nextChannel.learn} Handler={()=>SendCtrlCmd(1, 2)}>Clear</Button>
-    </div>
-  </div>
-</div>

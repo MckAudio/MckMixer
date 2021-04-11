@@ -1,16 +1,16 @@
 <script>
-  import SliderLabel from "../MckSvelte/controls/SliderLabel.svelte";
-  import Slider from "../MckSvelte/controls/Slider.svelte";
-  import Select from "../MckSvelte/controls/Select.svelte";
-  import Button from "../MckSvelte/controls/Button.svelte";
-  import Meter from "../MckSvelte/controls/Meter.svelte";
-  import InputText from "../MckSvelte/controls/InputText.svelte";
+  import SliderLabel from "./mck/controls/SliderLabel.svelte";
+  import Slider from "./mck/controls/Slider.svelte";
+  import Select from "./mck/controls/Select.svelte";
+  import Button from "./mck/controls/Button.svelte";
+  import Meter from "./mck/controls/Meter.svelte";
+  import InputText from "./mck/controls/InputText.svelte";
   import {
     DbToLog,
     LogToDb,
     FormatPan,
     FormatCon,
-  } from "../MckSvelte/utils/Tools.svelte";
+  } from "./mck/utils/Tools.svelte";
 
   export let data = undefined;
   export let SendValue = undefined;

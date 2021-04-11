@@ -1,6 +1,11 @@
 #include "MckControl.h"
+#include "MckLooper.h"
 
-mck::Control::Control() : m_isInitialized(true) {}
+mck::Control::Control()
+    : m_isInitialized(true),
+      m_looper()
+{
+}
 
 bool mck::Control::ProcessMidi(jack_port_t *inPort, jack_port_t *outPort, jack_nframes_t nframes, Config &config, bool &configChanged, ControlState &state)
 {
@@ -156,6 +161,11 @@ bool mck::Control::ApplyCommand(ControlCommand &cmd)
     return true;
 }
 
+void mck::Control::AddLooper(Looper *looper)
+{
+    m_looper.push_back(looper);
+}
+
 bool mck::Control::Process(jack_port_t *inPort, jack_port_t *outPort, jack_nframes_t nframes, Config &config, bool &configChanged)
 {
     void *inBuffer = jack_port_get_buffer(inPort, nframes);
@@ -182,7 +192,8 @@ bool mck::Control::Process(jack_port_t *inPort, jack_port_t *outPort, jack_nfram
     for (unsigned i = 0; i < evtCount; i++)
     {
         int ret = jack_midi_event_get(&midiEvent, inBuffer, i);
-        if (ret != 0) {
+        if (ret != 0)
+        {
             continue;
         }
         if (midiEvent.size < 2)
@@ -203,58 +214,77 @@ bool mck::Control::Process(jack_port_t *inPort, jack_port_t *outPort, jack_nfram
                 continue;
             }
 
-            if (config.channelControls.prevChannel.learn)
+            for (auto &chanCtrl : config.channelControls.controls)
             {
-                config.channelControls.prevChannel = ctrl;
+                if (chanCtrl.learn)
+                {
+                    chanCtrl = ctrl;
+                    break;
+                }
             }
-            else if (config.channelControls.nextChannel.learn)
-            {
-                config.channelControls.nextChannel = ctrl;
-            }
-            else if (config.channelControls.loopRecord.learn)
-            {
-                config.channelControls.loopRecord = ctrl;
-            }
-            else if (config.channelControls.loopStart.learn)
-            {
-                config.channelControls.loopStart = ctrl;
-            }
-            else if (config.channelControls.loopStop.learn)
-            {
-                config.channelControls.loopStop = ctrl;
-            }
+
             config.channelControls.learn = false;
             configChanged = true;
         }
         else
         {
             // SWITCH ETC.
-            if (config.channelControls.prevChannel == ctrl)
+            for (unsigned i = 0; i < config.channelControls.controls.size(); i++)
             {
-                if (config.channelControls.activeChannel > 0) {
-                    config.channelControls.activeChannel -= 1;
-                    configChanged = true;
+                unsigned idx = config.channelControls.activeChannel;
+                if (config.channelControls.controls[i] == ctrl)
+                {
+                    switch (i)
+                    {
+                    case CCT_PREV_CHANNEL:
+                        if (idx > 0)
+                        {
+                            config.channelControls.activeChannel -= 1;
+                            configChanged = true;
+                        }
+                        break;
+                    case CCT_NEXT_CHANNEL:
+                        if (config.channelCount > 1 && idx < config.channelCount - 1)
+                        {
+                            config.channelControls.activeChannel += 1;
+                            configChanged = true;
+                        }
+                        break;
+                    case CCT_LOOP_RECORD:
+                        if (idx < m_looper.size() && m_looper[idx] != nullptr)
+                        {
+                            LoopCommand cmd;
+                            cmd.chanIdx = idx;
+                            cmd.loopIdx = 0;
+                            cmd.mode = LOOP_RECORD;
+                            m_looper[idx]->ApplyCommand(cmd, config.channels[idx].isStereo);
+                        }
+                        break;
+                    case CCT_LOOP_START:
+                        if (idx < m_looper.size() && m_looper[idx] != nullptr)
+                        {
+                            LoopCommand cmd;
+                            cmd.chanIdx = idx;
+                            cmd.loopIdx = 0;
+                            cmd.mode = LOOP_PLAY;
+                            m_looper[idx]->ApplyCommand(cmd, config.channels[idx].isStereo);
+                        }
+                        break;
+                    case CCT_LOOP_STOP:
+                        if (idx < m_looper.size() && m_looper[idx] != nullptr)
+                        {
+                            LoopCommand cmd;
+                            cmd.chanIdx = idx;
+                            cmd.loopIdx = 0;
+                            cmd.mode = LOOP_STOP;
+                            m_looper[idx]->ApplyCommand(cmd, config.channels[idx].isStereo);
+                        }
+                        break;
+                    default:
+                        break;
+                    }
                 }
             }
-            else if (config.channelControls.nextChannel == ctrl)
-            {
-                if (config.channelCount > 1 && config.channelControls.activeChannel < config.channelCount - 1) {
-                    config.channelControls.activeChannel += 1;
-                    configChanged = true;
-                }
-            }/*
-            else if (config.channelControls.loopRecord == ctrl)
-            {
-                config.channelControls.loopRecord = ctrl;
-            }
-            else if (config.channelControls.loopStart == ctrl)
-            {
-                config.channelControls.loopStart = ctrl;
-            }
-            else if (config.channelControls.loopStop == ctrl)
-            {
-                config.channelControls.loopStop = ctrl;
-            }*/
         }
     }
     return true;

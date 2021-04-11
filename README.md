@@ -37,6 +37,12 @@ make gui
 make
 ```
 
+## Debugging
+
+Open the folder in VS Code and run ```make debug``` and ```cd gui && npm run dev```. Then use the run and debug target.
+
+The svelte gui can be debugged with an webkit enabled browser like epiphany on ```inspector://127.0.0.1:1234```.
+
 ## Build issues
 
 If libfreeverb3 is not found, add /usr/local/lib to /etc/ld.conf or in separate .conf file in the directory /etc/ld.conf.d/ and run sudo ldconfig -v.

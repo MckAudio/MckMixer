@@ -1,8 +1,8 @@
 <script>
-  import SliderLabel from "../MckSvelte/controls/SliderLabel.svelte";
-  import Slider from "../MckSvelte/controls/Slider.svelte";
-  import Select from "../MckSvelte/controls/Select.svelte";
-  import { DbToLog, LogToDb, FormatPan } from "../MckSvelte/utils/Tools.svelte";
+  import SliderLabel from "./mck/controls/SliderLabel.svelte";
+  import Slider from "./mck/controls/Slider.svelte";
+  import Select from "./mck/controls/Select.svelte";
+  import { DbToLog, LogToDb, FormatPan } from "./mck/utils/Tools.svelte";
 
   export let data = undefined;
   export let SendValue = undefined;

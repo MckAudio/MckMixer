@@ -218,12 +218,12 @@ namespace mck
 
     enum ChannelControlEnum
     {
-        CCT_NOTHING = 0,
-        CCT_PREV_CHANNEL,
+        CCT_PREV_CHANNEL = 0,
         CCT_NEXT_CHANNEL,
         CCT_LOOP_RECORD,
         CCT_LOOP_START,
-        CCT_LOOP_STOP
+        CCT_LOOP_STOP,
+        CCT_LENGTH
     };
 
     enum ChannelControlCommandEnum
@@ -239,7 +239,7 @@ namespace mck
     {
         char cmd;
         unsigned type;
-        ChannelControlCommand() : cmd(CC_NOTHING), type(CCT_NOTHING) {}
+        ChannelControlCommand() : cmd(CC_NOTHING), type(CCT_PREV_CHANNEL) {}
     };
     void to_json(nlohmann::json &j, const ChannelControlCommand &c);
     void from_json(const nlohmann::json &j, ChannelControlCommand &c);
@@ -248,19 +248,13 @@ namespace mck
     {
         bool learn;
         unsigned activeChannel;
-        MidiControl prevChannel;
-        MidiControl nextChannel;
-        MidiControl loopRecord;
-        MidiControl loopStart;
-        MidiControl loopStop;
+        std::vector<MidiControl> controls;
+        std::vector<std::string> names;
         ChannelControls()
             : learn(false),
               activeChannel(0),
-              prevChannel(),
-              nextChannel(),
-              loopRecord(),
-              loopStart(),
-              loopStop()
+              controls(),
+              names()
         {
         }
     };
