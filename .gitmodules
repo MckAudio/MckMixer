@@ -1,12 +1,12 @@
 [submodule "freeverb3"]
 	path = freeverb3
-	url = git@github.com:HenriCSHC/freeverb3.git
+	url = ../freeverb3.git
 [submodule "helper"]
 	path = helper
-	url = git@github.com:HenriCSHC/MckHelper.git
+	url = ../MckHelper.git
 [submodule "gui/MckSvelte"]
 	path = gui/src/mck
-	url = git@github.com:HenriCSHC/MckSvelte.git
+	url = ../MckSvelte.git
 [submodule "src/gui"]
 	path = src/gui
-	url = git@github.com:HenriCSHC/MckGui.git
+	url = ../MckGui.git

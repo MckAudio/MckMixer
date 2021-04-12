@@ -11,6 +11,7 @@
 
 sudo apt install build-essentials nodejs npm
 sudo apt install libfftw3-dev libjack-jackd2-dev zlib1g-dev libsndfile1-dev
+sudo apt install libgtk-3-dev libwebkit2gtk-4.0-dev
 
 sudo ld-config
 
@@ -19,6 +20,7 @@ sudo ld-config
 
 sudo dnf install make automake libtool gcc-c++ nodejs npm
 sudo dnf install fftw-devel jack-audio-connection-kit-devel zlib-devel libsndfile-devel
+sudo dnf install gtk3-devel webkit2gtk3-devel
 
 sudo ldconfig -v
 
