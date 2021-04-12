@@ -249,25 +249,25 @@
   }
 
   .base.active {
-    background-color: #f0d000;
+    background-color: var(--hl-color);
   }
 
   .base.highlight, .base.active {
-    border-color: #d0a000;
+    border-color: var(--hl-border-color);
   }
 
   .base > i,
   .base > span,
   .base > button {
     text-align: center;
-    font-family: mck-lato;
-    font-size: 14px;
+    font-family: var(--font-family);
+    font-size: var(--font-size);
   }
 
   span {
     text-align: center;
-    font-family: mck-lato;
-    font-size: 14;
+    font-family: var(--font-family);
+    font-size: var(--font-size);
   }
 
   .control {
@@ -275,7 +275,7 @@
     grid-template-rows: auto minmax(24px, auto);
     grid-row-gap: 2px;
     row-gap: 2px;
-    font-size: 14px;
+    font-size: var(--font-size);
   }
   .splitter {
     display: grid;
@@ -303,8 +303,8 @@
     padding: 0px;
     color: #222;
     background-color: #f0f0f0;
-    font-family: mck-lato;
-    font-size: 14px;
+    font-family: var(--font-family);
+    font-size: var(--font-size);
     text-align: center;
     border: 1px solid #222;
     border-radius: 2px;

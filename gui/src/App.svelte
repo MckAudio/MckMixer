@@ -5,6 +5,7 @@
   import Slider from "./mck/controls/Slider.svelte";
   import SliderLabel from "./mck/controls/SliderLabel.svelte";
   import Modal from "./mck/container/Modal.svelte";
+  import Button from "./mck/controls/Button.svelte";
   import Channel from "./Channel.svelte";
   import ReverbSend from "./ReverbSend.svelte";
   import DelaySend from "./DelaySend.svelte";
@@ -21,6 +22,7 @@ import ControlSettings from "./ControlSettings.svelte";
   let targets = [];
 
   let revTypes = ["STREV", "PROG2", "ZREV2", "NREVB"];
+  let gainTypes = ["Gain", "Pan", "Reverb Send", "Delay Send", "Input Gain", "Loop Gain"];
   let rtData = {};
 
   let showControlSettings = false;
@@ -104,9 +106,15 @@ import ControlSettings from "./ControlSettings.svelte";
 
 <div class="base">
   {#if dataReady}
-    <div class="header">
-      
+    <div class="header title">
+      MckMixer
     </div>
+    <div class="header gaingrid">
+      {#each gainTypes as gainType, i}
+        <Button disabled={data.channelControls.activeMaster} value={data.channelControls.activeGainCtrl === i}><nobr>{gainType}</nobr></Button>
+      {/each}
+    </div>
+    <div class="header"/>
     <div class="settings {data.channelControls.activeMaster ? 'active' : ''}">
       <Settings
         {rtData}
@@ -176,10 +184,28 @@ import ControlSettings from "./ControlSettings.svelte";
     grid-template-rows: auto 1fr;
     /*grid-row-gap: 1px;
     grid-column-gap: 1px;*/
-    background-color: #333;
+    background-color: var(--bg-color);
+  }
+  .title {
+    padding: 8px;
+    font-size: var(--font-header-size);
+    font-family: var(--font-family);
+    color: var(--fg-color);
+    font-weight: bold;
+  }
+  .gaingrid {
+    padding: 8px;
+    display: grid;
+    grid-gap: 4px;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    text-align: center;
+    box-shadow: 0px 5px 4px -3px var(--shadow-color); /*https://css-tricks.com/snippets/css/css-box-shadow/*/
+    z-index: 10;
   }
   .header {
-    grid-column: 1/-1;;
+    border-bottom: 1px solid var(--border-light-color);
+    z-index: 10;
   }
   .settings {
     grid-column: 1/2;
@@ -187,10 +213,11 @@ import ControlSettings from "./ControlSettings.svelte";
     padding: 8px;
     background-color: var(--bg-color);
     z-index: 10;
-    box-shadow: 1px 0px 4px 1px var(--shadow-color);
+    /*box-shadow: 1px 0px 4px 1px var(--shadow-color);*/
+    box-shadow: 5px 0px 4px -2px var(--shadow-color);
   }
   .settings.active {
-    background-color: #f0d000;
+    background-color: var(--hl-color);
   }
   .channels {
     grid-column: 2/3;
@@ -221,7 +248,8 @@ import ControlSettings from "./ControlSettings.svelte";
     grid-template-rows: 1fr 1fr;
     grid-gap: 8px;
     z-index: 10;
-    box-shadow: -1px 0px 4px 1px #555;
+    /*box-shadow: -1px 0px 4px 1px #555;*/
+    box-shadow: -5px 0px 4px -2px var(--shadow-color);
   }
   .master {
     grid-column: -2/-1;

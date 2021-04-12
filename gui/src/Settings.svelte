@@ -62,7 +62,6 @@
 </script>
 
 <div class="base {active ? 'active' : ''}">
-  <h1>MckMixer</h1>
   <div class="control">
     <i>New Channel:</i>
     <div class="splitter">

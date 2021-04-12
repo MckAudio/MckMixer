@@ -252,7 +252,7 @@ bool mck::Control::Process(jack_port_t *inPort, jack_port_t *outPort, jack_nfram
                     {
                     case CCT_PREV_CHANNEL:
                         config.channelControls.activeMaster = false;
-                        config.channelControls.activeChannel = (unsigned)(((int)config.channelControls.activeChannel - 1) % config.channelCount);
+                        config.channelControls.activeChannel = (config.channelControls.activeChannel + config.channelCount - 1) % config.channelCount;
                         configChanged = true;
                         break;
                     case CCT_NEXT_CHANNEL:
@@ -265,53 +265,61 @@ bool mck::Control::Process(jack_port_t *inPort, jack_port_t *outPort, jack_nfram
                         configChanged = true;
                         break;
                     case CCT_PREV_GAIN:
-                        config.channelControls.activeGainCtrl = (unsigned)(((int)config.channelControls.activeGainCtrl - 1) % GCT_LENGTH);
+                        config.channelControls.activeGainCtrl = (config.channelControls.activeGainCtrl + GCT_LENGTH - 1) % GCT_LENGTH;
                         configChanged = true;
                         break;
                     case CCT_NEXT_GAIN:
-                        config.channelControls.activeGainCtrl = (unsigned)(((int)config.channelControls.activeGainCtrl + 1) % GCT_LENGTH);
+                        config.channelControls.activeGainCtrl = (config.channelControls.activeGainCtrl + 1) % GCT_LENGTH;
                         configChanged = true;
                         break;
                     case CCT_GAIN_CTRL:
-                        switch (config.channelControls.activeGainCtrl)
+                        if (config.channelControls.activeMaster)
                         {
-                        case GCT_GAIN:
-                            config.channels[idx].gain = LogToDb(value);
-                            config.channels[idx].gainLin = DbToLin(config.channels[idx].gain);
+                            config.gain = LogToDb(value);
+                            config.gainLin = DbToLin(config.gain);
                             configChanged = true;
-                            break;
-                        case GCT_PAN:
-                            config.channels[idx].pan = value * 100.0;
-                            configChanged = true;
-                            break;
-                        case GCT_LOOP:
-                            config.channels[idx].loopGain = LogToDb(value);
-                            config.channels[idx].loopGainLin = DbToLin(config.channels[idx].loopGain);
-                            configChanged = true;
-                            break;
-                        case GCT_INPUT:
-                            config.channels[idx].inputGain = LogToDb(value);
-                            config.channels[idx].inputGainLin = DbToLin(config.channels[idx].inputGain);
-                            configChanged = true;
-                            break;
-                        case GCT_REVERB:
-                            config.channels[idx].sendReverb = LogToDb(value);
-                            config.channels[idx].sendReverbLin = DbToLin(config.channels[idx].sendReverb);
-                            configChanged = true;
-                            break;
-                        case GCT_DELAY:
-                            config.channels[idx].sendDelay = LogToDb(value);
-                            config.channels[idx].sendDelayLin = DbToLin(config.channels[idx].sendDelay);
-                            configChanged = true;
-                            break;
-                        default:
-                            break;
+                        }
+                        else
+                        {
+                            switch (config.channelControls.activeGainCtrl)
+                            {
+                            case GCT_GAIN:
+                                config.channels[idx].gain = LogToDb(value);
+                                config.channels[idx].gainLin = DbToLin(config.channels[idx].gain);
+                                configChanged = true;
+                                break;
+                            case GCT_PAN:
+                                config.channels[idx].pan = value * 100.0;
+                                configChanged = true;
+                                break;
+                            case GCT_LOOP:
+                                config.channels[idx].loopGain = LogToDb(value);
+                                config.channels[idx].loopGainLin = DbToLin(config.channels[idx].loopGain);
+                                configChanged = true;
+                                break;
+                            case GCT_INPUT:
+                                config.channels[idx].inputGain = LogToDb(value);
+                                config.channels[idx].inputGainLin = DbToLin(config.channels[idx].inputGain);
+                                configChanged = true;
+                                break;
+                            case GCT_REVERB:
+                                config.channels[idx].sendReverb = LogToDb(value);
+                                config.channels[idx].sendReverbLin = DbToLin(config.channels[idx].sendReverb);
+                                configChanged = true;
+                                break;
+                            case GCT_DELAY:
+                                config.channels[idx].sendDelay = LogToDb(value);
+                                config.channels[idx].sendDelayLin = DbToLin(config.channels[idx].sendDelay);
+                                configChanged = true;
+                                break;
+                            default:
+                                break;
+                            }
                         }
                         break;
                     case CCT_LOOP_RECORD:
                         if (config.channelControls.activeMaster)
                         {
-
                         }
                         else if (idx < m_looper.size() && m_looper[idx] != nullptr)
                         {

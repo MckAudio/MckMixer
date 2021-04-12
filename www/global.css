@@ -29,6 +29,8 @@
 	--border-light-color: #a0a0a0;
 	--shadow-color: #555;
 	--hover-color: #666;
+	--hl-color: #f0d000;
+	--hl-border-color: #d0a000;
 }
 html, body {
 	position: relative;
