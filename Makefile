@@ -18,7 +18,7 @@ release:
 
 production:
 	mkdir -p bin/dist
-	g++ -DPRODUCTION $(REL_FLAGS) --std=c++17 $(LMINCS) $(LSRCS) -o ./bin/release/mck-mixer $(LMLIBS)
+	g++ -DPRODUCTION $(REL_FLAGS) --std=c++17 $(LMINCS) $(LSRCS) -o ./bin/dist/mck-mixer $(LMLIBS)
 
 debug:
 	mkdir -p ./bin/debug
@@ -29,7 +29,7 @@ run:
 
 install: gui production
 	mkdir -p /usr/share/mck-mixer/gui/
-	cp ./bin/production/mck-mixer /usr/bin/
+	cp ./bin/dist/mck-mixer /usr/bin/
 	cp -r ./www/* /usr/share/mck-mixer/gui/
 	cp -r ./ressource/*.desktop /usr/share/applications/
 
